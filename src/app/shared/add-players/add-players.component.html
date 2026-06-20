@@ -1,1 +1,17 @@
-<p>add-players works!</p>
+<h3>Players</h3>
+
+<ul>
+  @for (player of players; track player.id) {
+    <li>
+      {{ player.name }}
+      @if (players.length > 1) {
+        <button type="button" (click)="removePlayer(player.id)">Remove</button>
+      }
+    </li>
+  }
+</ul>
+
+@if (players.length < maxPlayers) {
+  <input [(ngModel)]="newPlayerName" placeholder="Player name" />
+  <button type="button" (click)="addPlayer()">Add player</button>
+}
