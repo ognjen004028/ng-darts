@@ -1,0 +1,17 @@
+<h1>Home</h1>
+
+<h3>Pick a gamemode:</h3>
+<select [(ngModel)]="selectedGamemode">
+    @for (mode of gamemodes; track mode) {
+    <option [value]="mode">{{ mode }}</option>
+    }
+</select>
+
+@if(selectedGamemode === 'x01'){
+<select [(ngModel)]="selectedX01Score">
+    @for (score of x01Scores; track score) {
+    <option [value]="score"> {{ score }}</option>
+    }
+</select>
+}
+
