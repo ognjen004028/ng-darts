@@ -3,7 +3,7 @@
 <ul>
   @for (player of players; track player.id) {
     <li>
-      {{ player.name }}
+      <input type="text" [(ngModel)]="player.name" />
       @if (players.length > 1) {
         <button type="button" (click)="removePlayer(player.id)">Remove</button>
       }

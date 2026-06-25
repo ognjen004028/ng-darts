@@ -12,6 +12,7 @@
 - Up to **4 addable players** per match
 - Pass-and-play on a single device (MVP)
 - Domain rules in **pure TypeScript** (testable, backend-agnostic later)
+- By-hand code, no AI generated code except asked for explicitly. AI assistance only for architecture/code review, this is a learning project. 
 
 ---
 
