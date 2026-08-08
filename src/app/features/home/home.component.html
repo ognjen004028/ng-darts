@@ -16,3 +16,8 @@
 }
 
 <app-add-players (playersChange)="onPlayersChange($event)" />
+
+<button (click)="startGame()" [disabled]="players.length === 0">Start game</button>
+@if (startAttempted && players.length === 0) {
+  <p>Add at least one player to start.</p>
+}

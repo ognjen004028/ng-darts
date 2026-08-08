@@ -1,1 +1,13 @@
-<p>x01-game works!</p>
+<h1>X01 Game</h1>
+
+@if (session.hasSession()) {
+  <p>Mode: {{ session.mode() }}</p>
+  <p>Players: {{ playerNames() }}</p>
+  <ul>
+    @for (player of session.players(); track player.id) {
+      <li>{{ player.name }}: {{ remainingScore(player.id) ?? '—' }} remaining</li>
+    }
+  </ul>
+} @else {
+  <p>No active session.</p>
+}

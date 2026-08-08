@@ -1,1 +1,8 @@
-<p>cricket-game works!</p>
+<h1>Cricket Game</h1>
+
+@if (session.hasSession()) {
+  <p>Mode: {{ session.mode() }}</p>
+  <p>Players: {{ playerNames() }}</p>
+} @else {
+  <p>No active session.</p>
+}
