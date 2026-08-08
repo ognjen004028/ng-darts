@@ -12,7 +12,6 @@
 - Up to **4 addable players** per match
 - Pass-and-play on a single device (MVP)
 - Domain rules in **pure TypeScript** (testable, backend-agnostic later)
-- By-hand code, no AI generated code except asked for explicitly. AI assistance only for architecture/code review, this is a learning project. 
 
 ---
 
@@ -351,14 +350,17 @@ flowchart TB
 
 ## Current Project Status (update as you go)
 
+> The implementation plan lives in [`ROADMAP.md`](./ROADMAP.md) — status checkboxes below mirror it.
+
 - [x] Angular 19 standalone app scaffolded
 - [x] Feature page components generated (home, setup, cricket-game, x01-game)
 - [x] Home: gamemode select, conditional x01 score
 - [x] `<router-outlet />` in app shell
 - [x] Default route `''` → `HomeComponent`
 - [x] Route paths without leading `/` (setup route fixed)
-- [ ] `add-players` shared component
-- [ ] `GameSessionService`
-- [ ] Domain models & engines
-- [ ] Game route guard
-- [ ] Game screens wired to session
+- [x] `add-players` shared component (1–4 players, editable names)
+- [ ] `RULES.md` — lock rule variants (Phase 0)
+- [ ] Domain models & engines (Phase 1)
+- [ ] `GameSessionService` (Phase 2)
+- [ ] Game route guard (Phase 2)
+- [ ] Game screens wired to session (Phases 3–4)
