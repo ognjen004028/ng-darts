@@ -43,8 +43,8 @@
 | X01 engine (throw/endTurn/undo/bust/double-in/out/win) | ✅ |
 | X01 engine unit tests (34 specs) | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
 | Cricket engine | ❌ |
-| `GameSessionService` | ❌ |
-| Game route guard | ❌ |
+| `GameSessionService` (signals, `startGame`/`reset`) | ✅ |
+| Game route guard (`/game/*` → `/`) | ✅ |
 | `dart-input` + turn flow UI | ❌ |
 | Styling (all SCSS empty) | ❌ |
 
@@ -152,8 +152,8 @@ Run items in this sequence — each builds on the previous:
 2. 1.1 → models
 3. 1.2 → X01 engine
 4. 1.3 → engine tests
-5. 2.1 → `GameSessionService`
-6. 2.2 + 2.3 → Start + guard
+5. 2.1 → `GameSessionService` ✅
+6. 2.2 + 2.3 → Start + guard ✅
 7. 3.1 → `dart-input`
 8. 3.2 + 3.3 → X01 screen loop
 9. 4.1 + 4.2 → Cricket

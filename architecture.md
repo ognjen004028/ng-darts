@@ -363,6 +363,6 @@ flowchart TB
 - [x] Domain models (Phase 1.1)
 - [x] X01 engine (Phase 1.2)
 - [x] X01 engine unit tests (Phase 1.3)
-- [ ] `GameSessionService` (Phase 2)
-- [ ] Game route guard (Phase 2)
+- [x] `GameSessionService` (Phase 2)
+- [x] Game route guard (Phase 2)
 - [ ] Game screens wired to session (Phases 3–4)
