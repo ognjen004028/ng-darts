@@ -359,7 +359,7 @@ flowchart TB
 - [x] Default route `''` → `HomeComponent`
 - [x] Route paths without leading `/` (setup route fixed)
 - [x] `add-players` shared component (1–4 players, editable names)
-- [ ] `RULES.md` — lock rule variants (Phase 0)
+- [x] `RULES.md` — lock rule variants (Phase 0)
 - [ ] Domain models & engines (Phase 1)
 - [ ] `GameSessionService` (Phase 2)
 - [ ] Game route guard (Phase 2)

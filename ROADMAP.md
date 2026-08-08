@@ -15,6 +15,7 @@
 | Home: gamemode + x01 score select | ✅ |
 | `add-players` (1–4, editable names, emits `Player[]`) | ✅ |
 | `Player` model | ✅ (only `id`, `name`) |
+| `RULES.md` (rule variants locked) | ✅ |
 | Domain models (DartThrow, Turn, GameSession, …) | ❌ |
 | X01 / Cricket engines | ❌ |
 | `GameSessionService` | ❌ |
