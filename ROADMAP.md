@@ -6,6 +6,29 @@
 
 ---
 
+## Commit strategy
+
+- **Commits are made by the owner only — never automatic.** Agents prepare work, run
+  typecheck/tests, and leave changes uncommitted for the owner to review and commit.
+- **One commit per roadmap item** (or per natural stopping point within a long item).
+  Commit at the end of each session so the next session starts from a clean tree.
+- **Always commit green:** typecheck + tests pass before every commit. The domain tests
+  are the safety net — if they break, fix before committing.
+- **Implementation ships with its tests** in the same commit — the tests are the proof
+  the engine works, so they belong with the code.
+- **Follow the repo's existing style** (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
+  prefixes). Match the tone of past commits.
+- **Split only at clean seams.** If an item is one interdependent change (e.g. models +
+  the engine that uses them), one commit beats an artificial split. Split when the parts
+  are independently reviewable and each leaves tests green.
+- **Keep scaffolding/tooling with the feature that needs it** (e.g. `karma.conf.js` went
+  in with the first engine tests), and **never commit temp/generated artifacts**
+  (e.g. the deleted `.tmp-spec-run/`).
+- **Docs checkboxes** (`ROADMAP.md`/`architecture.md` status) go in the same commit as
+  the work they mark done, or in a tiny trailing `docs:` commit — not spread around.
+
+---
+
 ## Current Status (August 2026)
 
 | Area | Status |
@@ -16,13 +39,14 @@
 | `add-players` (1–4, editable names, emits `Player[]`) | ✅ |
 | `Player` model | ✅ (only `id`, `name`) |
 | `RULES.md` (rule variants locked) | ✅ |
-| Domain models (DartThrow, Turn, GameSession, …) | ❌ |
-| X01 / Cricket engines | ❌ |
+| Domain models (DartThrow, Turn, GameSession, Player.order) | ✅ |
+| X01 engine (throw/endTurn/undo/bust/double-in/out/win) | ✅ |
+| X01 engine unit tests (34 specs) | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
+| Cricket engine | ❌ |
 | `GameSessionService` | ❌ |
 | Game route guard | ❌ |
 | `dart-input` + turn flow UI | ❌ |
 | Styling (all SCSS empty) | ❌ |
-| Unit tests (real ones) | ❌ (karma+jasmine configured) |
 
 ---
 
