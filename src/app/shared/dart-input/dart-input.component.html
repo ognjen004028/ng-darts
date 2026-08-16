@@ -1,0 +1,29 @@
+<div class="dart-input">
+  <div class="multiplier" role="group" aria-label="Multiplier">
+    @for (mult of multipliers; track mult) {
+      <button
+        type="button"
+        class="multiplier-btn"
+        [class.selected]="multiplier === mult"
+        [disabled]="disabled"
+        (click)="selectMultiplier(mult)"
+      >
+        {{ mult }}
+      </button>
+    }
+  </div>
+
+  <div class="segments" role="group" aria-label="Segments 1 to 20">
+    @for (segment of segments; track segment) {
+      <button type="button" [disabled]="disabled" (click)="throwSegment(segment)">
+        {{ segment }}
+      </button>
+    }
+  </div>
+
+  <div class="bulls" role="group" aria-label="Bull and miss">
+    <button type="button" [disabled]="disabled" (click)="throwBullSingle()">Bull 25</button>
+    <button type="button" [disabled]="disabled" (click)="throwBullDouble()">Bull 50</button>
+    <button type="button" [disabled]="disabled" (click)="throwMiss()">Miss</button>
+  </div>
+</div>

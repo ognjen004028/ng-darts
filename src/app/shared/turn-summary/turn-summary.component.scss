@@ -1,0 +1,22 @@
+.turn-summary {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.slot {
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #aaa;
+  border-radius: 50%;
+  color: #888;
+  font-weight: 600;
+
+  &.filled {
+    border-style: solid;
+    color: #222;
+    background: #f0f0f0;
+  }
+}

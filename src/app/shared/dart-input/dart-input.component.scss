@@ -1,0 +1,37 @@
+.dart-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 22rem;
+}
+
+.multiplier,
+.bulls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.multiplier-btn.selected {
+  background: #2b6cb0;
+  color: #fff;
+}
+
+.segments {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+}
+
+button {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 0.35rem;
+  background: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}

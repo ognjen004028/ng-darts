@@ -1,5 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Player } from '../domain/models/player';
+import { DartThrow } from '../domain/models/dart-throw';
 import {
   GameSession as GameSessionShell,
   GameMode,
@@ -7,8 +8,12 @@ import {
 } from '../domain/models/game';
 import {
   X01GameState,
+  X01Result,
   X01Settings,
   createX01Game,
+  endTurn as engineEndTurn,
+  throwDart as engineThrowDart,
+  undoLastThrow as engineUndoLastThrow,
 } from '../domain/x01/x01-engine';
 
 /**
@@ -73,8 +78,52 @@ export class GameSessionService {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // Game actions — delegate to the engine, then sync the session shell.
+  // UI never re-implements rules (architecture.md); it just calls these.
+  // ---------------------------------------------------------------------------
+
+  /** Apply a dart in the active X01 game. Returns the engine result, or null when no X01 game is active. */
+  applyThrow(dart: DartThrow): X01Result | null {
+    const state = this.session()?.gameState;
+    if (!state) return null;
+    const outcome = engineThrowDart(state, dart);
+    this.updateX01GameState(outcome.state);
+    return outcome.result;
+  }
+
+  /** End the current turn in the active X01 game. Returns the engine result, or null when no X01 game is active. */
+  endTurn(): X01Result | null {
+    const state = this.session()?.gameState;
+    if (!state) return null;
+    const outcome = engineEndTurn(state);
+    this.updateX01GameState(outcome.state);
+    return outcome.result;
+  }
+
+  /** Undo the last dart (including a busted or winning turn) in the active X01 game. Returns the engine result, or null when no X01 game is active. */
+  undoLastThrow(): X01Result | null {
+    const state = this.session()?.gameState;
+    if (!state) return null;
+    const outcome = engineUndoLastThrow(state);
+    this.updateX01GameState(outcome.state);
+    return outcome.result;
+  }
+
   /** Clear the session (new game / leaving a match). */
   reset(): void {
     this.session.set(null);
+  }
+
+  /** Write back engine state and mirror status/winner on the session shell. */
+  private updateX01GameState(state: X01GameState): void {
+    const current = this.session();
+    if (!current) return;
+    this.session.set({
+      ...current,
+      status: state.status,
+      winnerId: state.winnerId,
+      gameState: state,
+    });
   }
 }

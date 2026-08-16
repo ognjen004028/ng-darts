@@ -1,0 +1,5 @@
+<div class="turn-summary" aria-label="Current turn">
+  @for (slot of slots; track slot) {
+    <span class="slot" [class.filled]="hasDart(slot)">{{ slotLabel(slot) }}</span>
+  }
+</div>

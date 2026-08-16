@@ -1,0 +1,6 @@
+<div class="game-actions">
+  <button type="button" (click)="undo.emit()" [disabled]="undoDisabled">Undo</button>
+  <button type="button" class="primary" (click)="endTurn.emit()" [disabled]="endTurnDisabled">
+    End turn
+  </button>
+</div>

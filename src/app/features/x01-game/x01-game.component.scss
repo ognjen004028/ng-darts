@@ -1,0 +1,33 @@
+.scoreboard {
+  list-style: none;
+  padding: 0;
+  max-width: 24rem;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #eee;
+
+    &.active {
+      background: #eef4ff;
+      font-weight: 600;
+    }
+  }
+
+  .score {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.winner-banner {
+  padding: 1rem;
+  background: #e8ffe8;
+  border: 1px solid #9bd39b;
+  border-radius: 0.5rem;
+}
+
+.message {
+  color: #b45309;
+  font-style: italic;
+}
