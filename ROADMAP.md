@@ -41,9 +41,9 @@
 | `Player` model                                             | ✅ (only `id`, `name`)                                               |
 | `RULES.md` (rule variants locked)                          | ✅                                                                   |
 | Domain models (DartThrow, Turn, GameSession, Player.order) | ✅                                                                   |
-| X01 engine (throw/endTurn/undo/bust/double-in/out/win)     | ✅                                                                   |
-| X01 engine unit tests (34 specs)                           | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
-| Cricket engine                                             | ❌                                                                   |
+| X01 engine (throw/endTurn/undo/bust/double-in/out/win)     | ✅                                                                   || X01 engine unit tests (34 specs) | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
+| Cricket engine (marks, close, points, win/draw) | ✅ |
+| Cricket game screen (targets × players grid) | ✅ |
 | `GameSessionService` (signals, `startGame`/`reset`)        | ✅                                                                   |
 | Game route guard (`/game/*` → `/`)                         | ✅                                                                   |
 | `dart-input` (1–20 with S/D/T, bull, miss)                 | ✅                                                                   |
@@ -114,13 +114,13 @@ Block `/game/*` when there is no valid session → redirect to `/`.
 
 ## Phase 4 — Cricket
 
-**4.1 — Cricket engine** (`src/app/domain/cricket/`)
-Per `RULES.md`: marks (S/D/T → 1/2/3), close at ≥3, points on closed targets per chosen variant, win = all targets closed + tie-break.
+- [x] **4.1 — Cricket engine** (`src/app/domain/cricket/`)
+  Per `RULES.md`: marks (S/D/T → 1/2/3), close at ≥3, points on closed targets per chosen variant, win = all targets closed + tie-break.
 
-**4.2 — Cricket game screen** (`src/app/features/cricket-game/`)
-Scoreboard grid (15–20 + bull × players) with marks and points, same turn-flow widgets as X01.
+- [x] **4.2 — Cricket game screen** (`src/app/features/cricket-game/`)
+  Scoreboard grid (15–20 + bull × players) with marks and points, same turn-flow widgets as X01.
 
-**Acceptance:** full Cricket game playable; engine tests green.
+**Acceptance:** full Cricket game playable; engine tests green. (Engine tests cover marks, scoring, win/deadlock/draw, undo; UX check in the browser.)
 
 ---
 
@@ -160,7 +160,7 @@ Run items in this sequence — each builds on the previous:
 6. 2.2 + 2.3 → Start + guard ✅
 7. 3.1 → `dart-input` ✅
 8. 3.2 + 3.3 → X01 screen loop ✅
-9. 4.1 + 4.2 → Cricket
+9. 4.1 + 4.2 → Cricket ✅
 10. 5.1 → design pass
 11. 5.2 → persistence/history
 12. 5.3 → UX gaps

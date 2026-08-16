@@ -366,4 +366,5 @@ flowchart TB
 - [x] `GameSessionService` (Phase 2)
 - [x] Game route guard (Phase 2)
 - [x] X01 game screen wired to session (Phase 3)
-- [ ] Cricket game screen wired to session (Phase 4)
+- [x] Cricket engine (Phase 4)
+- [x] Cricket game screen wired to session (Phase 4)
