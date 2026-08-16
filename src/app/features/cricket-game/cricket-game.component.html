@@ -1,8 +1,69 @@
-<h1>Cricket Game</h1>
+<h1>Cricket</h1>
 
-@if (session.hasSession()) {
-  <p>Mode: {{ session.mode() }}</p>
-  <p>Players: {{ playerNames() }}</p>
+@if (session.cricketGameState(); as state) {
+  @if (state.status === 'finished') {
+    <div class="winner-banner">
+      @if (state.winnerId; as winnerId) {
+        <h2>🎯 {{ winnerName(winnerId) }} wins!</h2>
+      } @else {
+        <h2>🤝 Draw!</h2>
+      }
+      <button type="button" (click)="newGame()">New game</button>
+    </div>
+  } @else {
+    <p class="current-player">Up next: <strong>{{ currentPlayerName() }}</strong></p>
+  }
+
+  @if (message(); as msg) {
+    <p class="message">{{ msg }}</p>
+  }
+
+  <table class="scoreboard">
+    <thead>
+      <tr>
+        <th class="target-col"></th>
+        @for (player of session.players(); track player.id) {
+          <th [class.active]="player.id === currentPlayerId()">{{ player.name }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (target of targets(); track targetKey(target)) {
+        <tr>
+          <th class="target-col">{{ targetLabel(target) }}</th>
+          @for (player of session.players(); track player.id) {
+            <td
+              [class.closed]="isClosed(state, player.id, target)"
+              [class.active]="player.id === currentPlayerId()"
+            >
+              {{ marksOf(state, player.id, target) }}
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+    <tfoot>
+      <tr>
+        <th class="target-col">Points</th>
+        @for (player of session.players(); track player.id) {
+          <td class="points-cell" [class.active]="player.id === currentPlayerId()">
+            {{ state.players[player.id].points }}
+          </td>
+        }
+      </tr>
+    </tfoot>
+  </table>
+
+  <app-turn-summary [turn]="state.currentTurn" />
+
+  <app-dart-input [disabled]="state.status === 'finished'" (dartThrow)="onDart($event)" />
+
+  <app-game-actions
+    [undoDisabled]="!canUndo()"
+    [endTurnDisabled]="!canEndTurn()"
+    (undo)="onUndo()"
+    (endTurn)="onEndTurn()"
+  />
 } @else {
   <p>No active session.</p>
 }

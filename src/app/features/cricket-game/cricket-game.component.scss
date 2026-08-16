@@ -1,0 +1,44 @@
+.scoreboard {
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+
+  th,
+  td {
+    min-width: 3rem;
+    padding: 0.4rem 0.6rem;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+  }
+
+  .target-col {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  th.active,
+  td.active {
+    background: #eef4ff;
+  }
+
+  td.closed {
+    font-weight: 700;
+    color: #1a7f37;
+  }
+
+  tfoot .points-cell {
+    font-weight: 700;
+    border-top: 2px solid #ddd;
+  }
+}
+
+.winner-banner {
+  padding: 1rem;
+  background: #e8ffe8;
+  border: 1px solid #9bd39b;
+  border-radius: 0.5rem;
+}
+
+.message {
+  color: #b45309;
+  font-style: italic;
+}

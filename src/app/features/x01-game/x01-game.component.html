@@ -1,6 +1,6 @@
 <h1>X01 Game</h1>
 
-@if (session.gameState(); as state) {
+@if (session.x01GameState(); as state) {
   @if (state.status === 'finished' && state.winnerId; as winnerId) {
     <div class="winner-banner">
       <h2>🎯 {{ winnerName(winnerId) }} wins!</h2>

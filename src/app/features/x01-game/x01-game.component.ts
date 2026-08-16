@@ -1,8 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { DartThrow } from '../../domain/models/dart-throw';
-import { X01Result } from '../../domain/x01/x01-engine';
-import { GameSessionService } from '../../state/game-session.service';
+import { GameSessionService, GameActionResult } from '../../state/game-session.service';
 import { DartInputComponent } from '../../shared/dart-input/dart-input.component';
 import { TurnSummaryComponent } from '../../shared/turn-summary/turn-summary.component';
 import { GameActionsComponent } from '../../shared/game-actions/game-actions.component';
@@ -43,7 +42,7 @@ export class X01GameComponent {
   }
 
   currentPlayerId(): string | null {
-    const state = this.session.gameState();
+    const state = this.session.x01GameState();
     return state ? state.playerIds[state.currentPlayerIndex] : null;
   }
 
@@ -57,14 +56,14 @@ export class X01GameComponent {
   }
 
   canUndo(): boolean {
-    const state = this.session.gameState();
+    const state = this.session.x01GameState();
     if (!state) return false;
     if (state.status === 'finished') return state.history.length > 0;
     return (state.currentTurn?.throws.length ?? 0) > 0 || state.history.length > 0;
   }
 
   canEndTurn(): boolean {
-    const state = this.session.gameState();
+    const state = this.session.x01GameState();
     return !!state && state.status === 'in_progress' && (state.currentTurn?.throws.length ?? 0) > 0;
   }
 
@@ -72,7 +71,7 @@ export class X01GameComponent {
     return this.session.players().find((p) => p.id === id)?.name ?? 'Player';
   }
 
-  private handleResult(result: X01Result | null): void {
+  private handleResult(result: GameActionResult | null): void {
     if (!result) return;
     switch (result.type) {
       case 'bust':
@@ -86,6 +85,9 @@ export class X01GameComponent {
         break;
       case 'success':
         this.message.set(null);
+        break;
+      case 'draw':
+        // Unreachable in X01; present for the shared GameActionResult union.
         break;
     }
   }

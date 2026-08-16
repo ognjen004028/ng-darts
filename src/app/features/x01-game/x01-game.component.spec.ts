@@ -67,13 +67,13 @@ describe('X01GameComponent', () => {
     }
 
     expect(component.currentPlayerName()).toBe('Grace');
-    expect(session.gameState()?.currentTurn).toBeNull();
+    expect(session.x01GameState()?.currentTurn).toBeNull();
   });
 
   it('shows a bust message and lets undo hand play back', () => {
     session.startGame('x01', players);
     fixture.detectChanges();
-    const state = session.gameState();
+    const state = session.x01GameState();
     if (!state) throw new Error('expected game state');
     state.scores['p1'] = 20;
 
@@ -86,13 +86,13 @@ describe('X01GameComponent', () => {
     component.onUndo();
 
     expect(component.currentPlayerName()).toBe('Ada');
-    expect(session.gameState()?.currentTurn?.throws.length).toBe(1);
+    expect(session.x01GameState()?.currentTurn?.throws.length).toBe(1);
   });
 
   it('shows a winner banner and disables the dart input on checkout', () => {
     session.startGame('x01', players);
     fixture.detectChanges();
-    const state = session.gameState();
+    const state = session.x01GameState();
     if (!state) throw new Error('expected game state');
     state.scores['p1'] = 40;
 
