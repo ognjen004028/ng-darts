@@ -365,4 +365,5 @@ flowchart TB
 - [x] X01 engine unit tests (Phase 1.3)
 - [x] `GameSessionService` (Phase 2)
 - [x] Game route guard (Phase 2)
-- [ ] Game screens wired to session (Phases 3–4)
+- [x] X01 game screen wired to session (Phase 3)
+- [ ] Cricket game screen wired to session (Phase 4)

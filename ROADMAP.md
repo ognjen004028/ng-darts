@@ -26,27 +26,31 @@
   (e.g. the deleted `.tmp-spec-run/`).
 - **Docs checkboxes** (`ROADMAP.md`/`architecture.md` status) go in the same commit as
   the work they mark done, or in a tiny trailing `docs:` commit — not spread around.
+- Only user runs tests via `ng test` - do not run headless tests.
 
 ---
 
 ## Current Status (August 2026)
 
-| Area | Status |
-|------|--------|
-| Angular 19 standalone scaffold | ✅ |
-| Routing (`''`, `setup/:mode`, `game/*`) | ✅ routes exist, game pages are placeholders |
-| Home: gamemode + x01 score select | ✅ |
-| `add-players` (1–4, editable names, emits `Player[]`) | ✅ |
-| `Player` model | ✅ (only `id`, `name`) |
-| `RULES.md` (rule variants locked) | ✅ |
-| Domain models (DartThrow, Turn, GameSession, Player.order) | ✅ |
-| X01 engine (throw/endTurn/undo/bust/double-in/out/win) | ✅ |
-| X01 engine unit tests (34 specs) | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
-| Cricket engine | ❌ |
-| `GameSessionService` (signals, `startGame`/`reset`) | ✅ |
-| Game route guard (`/game/*` → `/`) | ✅ |
-| `dart-input` + turn flow UI | ❌ |
-| Styling (all SCSS empty) | ❌ |
+| Area                                                       | Status                                                               |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| Angular 19 standalone scaffold                             | ✅                                                                   |
+| Routing (`''`, `setup/:mode`, `game/*`)                    | ✅ routes exist, game pages are placeholders                         |
+| Home: gamemode + x01 score select                          | ✅                                                                   |
+| `add-players` (1–4, editable names, emits `Player[]`)      | ✅                                                                   |
+| `Player` model                                             | ✅ (only `id`, `name`)                                               |
+| `RULES.md` (rule variants locked)                          | ✅                                                                   |
+| Domain models (DartThrow, Turn, GameSession, Player.order) | ✅                                                                   |
+| X01 engine (throw/endTurn/undo/bust/double-in/out/win)     | ✅                                                                   |
+| X01 engine unit tests (34 specs)                           | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
+| Cricket engine                                             | ❌                                                                   |
+| `GameSessionService` (signals, `startGame`/`reset`)        | ✅                                                                   |
+| Game route guard (`/game/*` → `/`)                         | ✅                                                                   |
+| `dart-input` (1–20 with S/D/T, bull, miss)                 | ✅                                                                   |
+| `turn-summary` / `game-actions` widgets                    | ✅                                                                   |
+| X01 game screen (scoreboard, undo, bust, win banner)       | ✅                                                                   |
+| Cricket game screen                                        | ❌                                                                   |
+| Styling (all SCSS empty)                                   | ❌                                                                   |
 
 ---
 
@@ -95,16 +99,16 @@ Block `/game/*` when there is no valid session → redirect to `/`.
 
 ## Phase 3 — Playable X01 loop (first vertical slice)
 
-**3.1 — `dart-input` shared component** (`src/app/shared/dart-input/`)
-Buttons for segments 1–20 with S/D/T, bull, miss. Emits `DartThrow`; engines validate.
+- [x] **3.1 — `dart-input` shared component** (`src/app/shared/dart-input/`)
+      Buttons for segments 1–20 with S/D/T, bull, miss. Emits `DartThrow`; engines validate.
 
-**3.2 — X01 game screen** (`src/app/features/x01-game/`)
-Reads session; shows current player, remaining score per player, turn's darts so far, `End turn` and `Undo`. Win → `finished` status + winner banner.
+- [x] **3.2 — X01 game screen** (`src/app/features/x01-game/`)
+      Reads session; shows current player, remaining score per player, turn's darts so far, `End turn` and `Undo`. Win → `finished` status + winner banner.
 
-**3.3 — `turn-summary` / `game-actions` shared components**
-Small reusable widgets per `architecture.md`'s shared UI list.
+- [x] **3.3 — `turn-summary` / `game-actions` shared components**
+      Small reusable widgets per `architecture.md`'s shared UI list.
 
-**Acceptance:** two people can play a full 301 game on one device, no refresh. Undo removes the last dart correctly, including a busted turn.
+**Acceptance:** two people can play a full 301 game on one device, no refresh. Undo removes the last dart correctly, including a busted turn. (Covered by component + service specs; full UX check in the browser.)
 
 ---
 
@@ -154,8 +158,8 @@ Run items in this sequence — each builds on the previous:
 4. 1.3 → engine tests
 5. 2.1 → `GameSessionService` ✅
 6. 2.2 + 2.3 → Start + guard ✅
-7. 3.1 → `dart-input`
-8. 3.2 + 3.3 → X01 screen loop
+7. 3.1 → `dart-input` ✅
+8. 3.2 + 3.3 → X01 screen loop ✅
 9. 4.1 + 4.2 → Cricket
 10. 5.1 → design pass
 11. 5.2 → persistence/history
