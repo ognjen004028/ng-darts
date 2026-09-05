@@ -22,14 +22,17 @@ src/app/
 ├── core/                    # App-wide singletons & infrastructure
 │   └── guards/              # e.g. game-session.guard.ts
 ├── shared/                  # Reusable UI (no business rules)
-│   └── add-players/         # Player list UI
+│   ├── add-players/         # Player list UI
+│   ├── dart-input/          # Segment pad
+│   ├── turn-summary/        # Current turn slots
+│   ├── game-actions/        # Undo / End turn
+│   └── game-shell/          # Shared game chrome
 ├── domain/                  # Pure TS — no Angular imports
 │   ├── models/              # Player, DartThrow, GameSession, etc.
 │   ├── cricket/             # Cricket engine & rules
 │   └── x01/                 # X01 engine & rules
 ├── features/                # Routed pages (screens)
-│   ├── home/
-│   ├── setup/               # Optional; may merge with home early on
+│   ├── home/                # Mode, X01 score, players, Start
 │   ├── cricket-game/
 │   └── x01-game/
 ├── state/                   # Client session state
@@ -60,11 +63,11 @@ Angular paths **do not** start with `/` in route config.
 | Route | Component | Purpose |
 |-------|-----------|---------|
 | `''` | `HomeComponent` | Mode selection, x01 score, players |
-| `setup/:mode` | `SetupComponent` | Optional dedicated setup (if split from home) |
 | `game/cricket-game` | `CricketGameComponent` | Live Cricket scoring |
 | `game/x01-game` | `X01GameComponent` | Live X01 scoring |
+| `**` | redirect to `''` | Unknown paths |
 
-> **Note:** Game routes may be renamed to `game/cricket` and `game/x01` for consistency — update routes and navigation together.
+Home owns setup. There is no dedicated setup route.
 
 ### Navigation flow
 
@@ -79,6 +82,7 @@ Angular paths **do not** start with `/` in route config.
 ### Guards (recommended before game routes)
 
 - Block `/game/*` if no valid session (no players or game not initialized)
+- Block a game route when the session mode does not match the route
 - Redirect to `/`
 
 ### Root shell
@@ -101,7 +105,7 @@ Pure TypeScript interfaces/types — no Angular.
 - **DartThrow** — `segment` (1-20 | bull), `multiplier` (1 | 2 | 3)
 - **Turn** — `playerId`, `throws[]` (max 3)
 - **GameMode** — `'cricket' | 'x01'`
-- **GameSession** — mode, players, settings, active game state, status (`setup | in_progress | finished`)
+- **GameSession** — mode, players, settings, active game state, status (`in_progress | finished`)
 
 ### Settings
 
@@ -159,7 +163,7 @@ UI shows messages from engine results — **do not duplicate rules in templates*
 ### MVP (current)
 
 - `AddPlayersComponent`: child-owned player list UI
-- Emits to parent via `@Output()` or `output()`
+- Emits to parent via `output()`
 - `HomeComponent`: holds `selectedGamemode`, `selectedX01Score`, `players`
 
 ### Next step (before game navigation)
@@ -236,7 +240,8 @@ Requires `FormsModule` in standalone `imports` for `ngModel`.
 | `add-players` | Name list, add/remove |
 | `dart-input` | Segment + S/D/T + bull + miss |
 | `turn-summary` | Current turn's darts |
-| `game-actions` | Undo, end turn, new game |
+| `game-actions` | Undo, end turn |
+| `game-shell` | Winner banner, message, dart pad, actions; scoreboard via content |
 | Scoreboard pieces | Mode-specific |
 
 Input components emit `DartThrow`; engines validate.
@@ -315,7 +320,6 @@ Standalone components: add all used modules/components to each component's `impo
 flowchart TB
     subgraph features [Features - Pages]
         Home
-        Setup
         CricketUI[Cricket Game]
         X01UI[X01 Game]
     end
@@ -323,6 +327,7 @@ flowchart TB
     subgraph shared [Shared UI]
         AddPlayers[add-players]
         DartInput[dart-input]
+        GameShell[game-shell]
     end
 
     subgraph state [State]
@@ -339,8 +344,9 @@ flowchart TB
     Home --> Session
     CricketUI --> Session
     X01UI --> Session
-    CricketUI --> DartInput
-    X01UI --> DartInput
+    CricketUI --> GameShell
+    X01UI --> GameShell
+    GameShell --> DartInput
     Session --> Models
     Session --> CricketEngine
     Session --> X01Engine
@@ -353,11 +359,11 @@ flowchart TB
 > The implementation plan lives in [`ROADMAP.md`](./ROADMAP.md) — status checkboxes below mirror it.
 
 - [x] Angular 19 standalone app scaffolded
-- [x] Feature page components generated (home, setup, cricket-game, x01-game)
+- [x] Feature page components generated (home, cricket-game, x01-game; setup removed)
 - [x] Home: gamemode select, conditional x01 score
 - [x] `<router-outlet />` in app shell
 - [x] Default route `''` → `HomeComponent`
-- [x] Route paths without leading `/` (setup route fixed)
+- [x] Route paths without leading `/`
 - [x] `add-players` shared component (1–4 players, editable names)
 - [x] `RULES.md` — lock rule variants (Phase 0)
 - [x] Domain models (Phase 1.1)

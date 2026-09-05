@@ -1,59 +1,33 @@
-# DartsProject
+# ng-darts
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.7.
+Pass-and-play darts scorer. The app runs in the browser. Players can play **X01** (301 / 501 / 701) or **Cricket** on one device.
 
-## Development server
+Game rules live in pure TypeScript engines. The UI does not re-implement the rules.
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Start the app
 
 ```bash
-ng generate component component-name
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Open `http://localhost:4200/`.
 
-```bash
-ng generate --help
-```
+## Docs
 
-## Building
+| File | Content |
+|------|---------|
+| [RULES.md](./RULES.md) | Locked X01 and Cricket rules |
+| [architecture.md](./architecture.md) | Folder layout, routing, and conventions |
+| [ROADMAP.md](./ROADMAP.md) | Feature phases and status |
 
-To build the project run:
+## Scripts
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Script | Command |
+|--------|---------|
+| Start the dev server | `npm start` |
+| Production build | `npm run build` |
+| Unit tests (watch) | `npm test` |
+| Unit tests (one shot) | `npm run test:ci` |
+| Lint | `npm run lint` |
+| Format | `npm run format` |

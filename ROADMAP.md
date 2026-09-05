@@ -30,27 +30,27 @@
 
 ---
 
-## Current Status (August 2026)
+## Current Status (September 2026)
 
 | Area                                                       | Status                                                               |
 | ---------------------------------------------------------- | -------------------------------------------------------------------- |
 | Angular 19 standalone scaffold                             | ✅                                                                   |
-| Routing (`''`, `setup/:mode`, `game/*`)                    | ✅ routes exist, game pages are placeholders                         |
+| Routing (`''`, `game/*`, wildcard)                         | ✅ setup route removed; game pages are live                          |
 | Home: gamemode + x01 score select                          | ✅                                                                   |
 | `add-players` (1–4, editable names, emits `Player[]`)      | ✅                                                                   |
-| `Player` model                                             | ✅ (only `id`, `name`)                                               |
+| `Player` model                                             | ✅ (`id`, `name`, `order`)                                           |
 | `RULES.md` (rule variants locked)                          | ✅                                                                   |
 | Domain models (DartThrow, Turn, GameSession, Player.order) | ✅                                                                   |
-| X01 engine (throw/endTurn/undo/bust/double-in/out/win)     | ✅                                                                   || X01 engine unit tests (34 specs) | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
-| Cricket engine (marks, close, points, win/draw) | ✅ |
-| Cricket game screen (targets × players grid) | ✅ |
+| X01 engine (throw/endTurn/undo/bust/double-in/out/win)     | ✅                                                                   |
+| X01 engine unit tests                                      | ✅ (via `ng test`; headless: `ng test --karma-config=karma.conf.js`) |
+| Cricket engine (marks, close, points, win/draw)            | ✅                                                                   |
+| Cricket game screen (targets × players grid)               | ✅                                                                   |
 | `GameSessionService` (signals, `startGame`/`reset`)        | ✅                                                                   |
-| Game route guard (`/game/*` → `/`)                         | ✅                                                                   |
+| Game route guard (`/game/*` → `/`, mode must match)        | ✅                                                                   |
 | `dart-input` (1–20 with S/D/T, bull, miss)                 | ✅                                                                   |
 | `turn-summary` / `game-actions` widgets                    | ✅                                                                   |
 | X01 game screen (scoreboard, undo, bust, win banner)       | ✅                                                                   |
-| Cricket game screen                                        | ❌                                                                   |
-| Styling (all SCSS empty)                                   | ❌                                                                   |
+| Styling                                                    | ◻️ game widgets styled; full design pass is Phase 5.1                |
 
 ---
 
@@ -69,7 +69,7 @@ Decide and document the rule variants before writing engines. Open questions fro
 ## Phase 1 — Domain foundation (pure TS, fully tested)
 
 **1.1 — Domain models** (`src/app/domain/models/`)
-`DartThrow` (segment 1–20 | bull, multiplier 1/2/3, or miss), `Turn` (max 3 throws, playerId), `GameMode`, `GameSession` (mode, players, settings, per-player state, status `setup | in_progress | finished`), extended `Player` (`order`).
+`DartThrow` (segment 1–20 | bull, multiplier 1/2/3, or miss), `Turn` (max 3 throws, playerId), `GameMode`, `GameSession` (mode, players, settings, per-player state, status `in_progress | finished`), extended `Player` (`order`).
 Extend the existing `player.ts` rather than rewriting.
 
 **1.2 — X01 engine** (`src/app/domain/x01/`)
