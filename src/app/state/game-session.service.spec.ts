@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Player } from '../domain/models/player';
 import { GameSessionService } from './game-session.service';
+import { cricketCloseAll, x01BustFrom301, x01CheckoutFrom301 } from '../../testing/darts';
+import { applyDarts } from '../../testing/session';
 
 describe('GameSessionService', () => {
   let service: GameSessionService;
@@ -36,7 +38,10 @@ describe('GameSessionService', () => {
 
       expect(service.hasSession()).toBe(true);
       expect(service.mode()).toBe('x01');
-      expect(service.players()).toEqual(players);
+      expect(service.players()).toEqual([
+        { id: 'p1', name: 'Ada', order: 0 },
+        { id: 'p2', name: 'Grace', order: 1 },
+      ]);
       expect(service.status()).toBe('in_progress');
       expect(service.winnerId()).toBeNull();
 
@@ -105,26 +110,17 @@ describe('GameSessionService', () => {
     });
 
     it('syncs session status and winner when the game is won', () => {
-      service.startGame('x01', players);
-      // Test setup: force a checkout position on the live engine state.
-      const state = service.x01GameState();
-      if (!state) throw new Error('expected game state');
-      state.scores['p1'] = 40;
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
 
-      const result = service.applyThrow({ kind: 'double', target: 20 });
-
-      expect(result?.type).toBe('game_won');
       expect(service.status()).toBe('finished');
       expect(service.winnerId()).toBe('p1');
       expect(service.x01GameState()?.status).toBe('finished');
     });
 
     it('restores the session to in_progress after undoing a win', () => {
-      service.startGame('x01', players);
-      const state = service.x01GameState();
-      if (!state) throw new Error('expected game state');
-      state.scores['p1'] = 40;
-      service.applyThrow({ kind: 'double', target: 20 });
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
       expect(service.status()).toBe('finished');
 
       service.undoLastThrow();
@@ -134,12 +130,9 @@ describe('GameSessionService', () => {
     });
 
     it('undoes a busted turn and hands play back to the previous player', () => {
-      service.startGame('x01', players);
-      const state = service.x01GameState();
-      if (!state) throw new Error('expected game state');
-      state.scores['p1'] = 20;
+      service.startGame('x01', players, { startingScore: 301 });
+      applyDarts(service, x01BustFrom301);
 
-      expect(service.applyThrow({ kind: 'triple', target: 10 })?.type).toBe('bust');
       expect(service.x01GameState()?.currentPlayerIndex).toBe(1);
       expect(service.x01GameState()?.currentTurn).toBeNull();
 
@@ -171,16 +164,8 @@ describe('GameSessionService', () => {
 
     it('syncs session status and winner when cricket is won', () => {
       service.startGame('cricket', players);
-      const state = service.cricketGameState();
-      if (!state) throw new Error('expected game state');
-      // Close all targets for p1 but the last one; points are irrelevant to win.
-      for (const target of state.settings.targets.filter((t) => t !== 15)) {
-        state.players['p1'].marks[String(target)] = 3;
-      }
+      applyDarts(service, cricketCloseAll);
 
-      const result = service.applyThrow({ kind: 'triple', target: 15 });
-
-      expect(result?.type).toBe('game_won');
       expect(service.status()).toBe('finished');
       expect(service.winnerId()).toBe('p1');
     });

@@ -6,16 +6,16 @@
 
 button {
   padding: 0.6rem 1.2rem;
-  border: 1px solid #ccc;
-  border-radius: 0.35rem;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
   font-size: 1rem;
   cursor: pointer;
 
   &.primary {
-    background: #2b6cb0;
-    border-color: #2b6cb0;
-    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-primary-contrast);
   }
 
   &:disabled {

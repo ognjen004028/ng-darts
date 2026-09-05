@@ -1,6 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { DartThrow } from '../../domain/models/dart-throw';
-import { Turn } from '../../domain/models/turn';
+import { DARTS_PER_TURN, Turn } from '../../domain/models/turn';
 
 /**
  * Displays the darts of the current turn as three slots (ROADMAP 3.3).
@@ -12,23 +12,24 @@ import { Turn } from '../../domain/models/turn';
   imports: [],
   templateUrl: './turn-summary.component.html',
   styleUrl: './turn-summary.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TurnSummaryComponent {
-  /** Fixed slot positions 0–2; a turn holds at most 3 darts. */
-  readonly slots = [0, 1, 2];
+  readonly turn = input<Turn | null>(null);
 
-  @Input() turn: Turn | null = null;
+  readonly slotViews = computed(() => {
+    const throws = this.turn()?.throws ?? [];
+    return Array.from({ length: DARTS_PER_TURN }, (_, slot) => {
+      const dart = throws[slot];
+      return {
+        slot,
+        filled: dart != null,
+        label: dart ? this.dartLabel(dart) : '—',
+      };
+    });
+  });
 
-  hasDart(slot: number): boolean {
-    return this.turn?.throws.length != null && this.turn.throws.length > slot;
-  }
-
-  slotLabel(slot: number): string {
-    const dart = this.turn?.throws[slot];
-    return dart ? this.dartLabel(dart) : '—';
-  }
-
-  dartLabel(dart: DartThrow): string {
+  private dartLabel(dart: DartThrow): string {
     switch (dart.kind) {
       case 'miss':
         return 'Miss';

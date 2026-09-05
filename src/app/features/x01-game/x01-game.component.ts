@@ -1,10 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { DartThrow } from '../../domain/models/dart-throw';
-import { GameSessionService, GameActionResult } from '../../state/game-session.service';
-import { DartInputComponent } from '../../shared/dart-input/dart-input.component';
-import { TurnSummaryComponent } from '../../shared/turn-summary/turn-summary.component';
-import { GameActionsComponent } from '../../shared/game-actions/game-actions.component';
+import { GameActionResult, GameSessionService } from '../../state/game-session.service';
+import { GameShellComponent } from '../../shared/game-shell/game-shell.component';
+import {
+  canEndTurn as isEndTurnAllowed,
+  canUndo as isUndoAllowed,
+} from '../../shared/game-play/turn-flow';
+import { messageForResult } from '../../shared/game-play/result-message';
 
 /**
  * Live X01 scoring screen (ROADMAP 3.2). Reads the session and drives the
@@ -12,16 +15,37 @@ import { GameActionsComponent } from '../../shared/game-actions/game-actions.com
  */
 @Component({
   selector: 'app-x01-game',
-  imports: [DartInputComponent, TurnSummaryComponent, GameActionsComponent],
+  imports: [GameShellComponent],
   templateUrl: './x01-game.component.html',
   styleUrl: './x01-game.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class X01GameComponent {
   private readonly router = inject(Router);
   readonly session = inject(GameSessionService);
 
-  /** Latest engine result message (bust, checkout, invalid), cleared on success. */
   readonly message = signal<string | null>(null);
+
+  readonly currentPlayerName = computed(() => {
+    const state = this.session.x01GameState();
+    if (!state) return '';
+    return this.playerName(state.playerIds[state.currentPlayerIndex]);
+  });
+
+  readonly winnerName = computed(() => {
+    const id = this.session.x01GameState()?.winnerId;
+    return id ? this.playerName(id) : null;
+  });
+
+  readonly canUndo = computed(() => {
+    const state = this.session.x01GameState();
+    return state ? isUndoAllowed(state) : false;
+  });
+
+  readonly canEndTurn = computed(() => {
+    const state = this.session.x01GameState();
+    return state ? isEndTurnAllowed(state) : false;
+  });
 
   onDart(dart: DartThrow): void {
     this.handleResult(this.session.applyThrow(dart));
@@ -35,60 +59,18 @@ export class X01GameComponent {
     this.handleResult(this.session.undoLastThrow());
   }
 
-  /** Leave the finished/live game back to setup (session cleared). */
+  /** Leave the finished/live game back to home (session cleared). */
   newGame(): void {
     this.session.reset();
     this.router.navigate(['/']);
   }
 
-  currentPlayerId(): string | null {
-    const state = this.session.x01GameState();
-    return state ? state.playerIds[state.currentPlayerIndex] : null;
-  }
-
-  currentPlayerName(): string {
-    const id = this.currentPlayerId();
-    return id ? this.playerName(id) : '';
-  }
-
-  winnerName(playerId: string): string {
-    return this.playerName(playerId);
-  }
-
-  canUndo(): boolean {
-    const state = this.session.x01GameState();
-    if (!state) return false;
-    if (state.status === 'finished') return state.history.length > 0;
-    return (state.currentTurn?.throws.length ?? 0) > 0 || state.history.length > 0;
-  }
-
-  canEndTurn(): boolean {
-    const state = this.session.x01GameState();
-    return !!state && state.status === 'in_progress' && (state.currentTurn?.throws.length ?? 0) > 0;
-  }
-
   private playerName(id: string): string {
-    return this.session.players().find((p) => p.id === id)?.name ?? 'Player';
+    return this.session.players().find((player) => player.id === id)?.name ?? 'Player';
   }
 
   private handleResult(result: GameActionResult | null): void {
     if (!result) return;
-    switch (result.type) {
-      case 'bust':
-        this.message.set('Bust — turn reverted, next player up.');
-        break;
-      case 'game_won':
-        this.message.set(`${this.playerName(result.winnerId)} wins!`);
-        break;
-      case 'invalid':
-        this.message.set(result.reason);
-        break;
-      case 'success':
-        this.message.set(null);
-        break;
-      case 'draw':
-        // Unreachable in X01; present for the shared GameActionResult union.
-        break;
-    }
+    this.message.set(messageForResult(result, (id) => this.playerName(id)));
   }
 }

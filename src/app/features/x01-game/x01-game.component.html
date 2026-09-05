@@ -1,38 +1,28 @@
 <h1>X01 Game</h1>
 
 @if (session.x01GameState(); as state) {
-  @if (state.status === 'finished' && state.winnerId; as winnerId) {
-    <div class="winner-banner">
-      <h2>🎯 {{ winnerName(winnerId) }} wins!</h2>
-      <button type="button" (click)="newGame()">New game</button>
-    </div>
-  } @else {
-    <p class="current-player">Up next: <strong>{{ currentPlayerName() }}</strong></p>
-  }
-
-  @if (message(); as msg) {
-    <p class="message">{{ msg }}</p>
-  }
-
-  <ul class="scoreboard">
-    @for (player of session.players(); track player.id) {
-      <li [class.active]="player.id === state.playerIds[state.currentPlayerIndex]">
-        <span class="name">{{ player.name }}</span>
-        <span class="score">{{ state.scores[player.id] }}</span>
-      </li>
-    }
-  </ul>
-
-  <app-turn-summary [turn]="state.currentTurn" />
-
-  <app-dart-input [disabled]="state.status === 'finished'" (dartThrow)="onDart($event)" />
-
-  <app-game-actions
+  <app-game-shell
+    [finished]="state.status === 'finished'"
+    [winnerName]="winnerName()"
+    [message]="message()"
+    [currentPlayerName]="currentPlayerName()"
+    [turn]="state.currentTurn"
     [undoDisabled]="!canUndo()"
     [endTurnDisabled]="!canEndTurn()"
+    (dartThrow)="onDart($event)"
     (undo)="onUndo()"
     (endTurn)="onEndTurn()"
-  />
+    (newGame)="newGame()"
+  >
+    <ul class="scoreboard">
+      @for (player of session.players(); track player.id) {
+        <li [class.active]="player.id === state.playerIds[state.currentPlayerIndex]">
+          <span class="name">{{ player.name }}</span>
+          <span class="score">{{ state.scores[player.id] }}</span>
+        </li>
+      }
+    </ul>
+  </app-game-shell>
 } @else {
   <p>No active session.</p>
 }

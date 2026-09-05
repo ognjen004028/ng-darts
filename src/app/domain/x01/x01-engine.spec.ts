@@ -7,36 +7,21 @@ import {
   undoLastThrow,
   X01GameState,
 } from './x01-engine';
-import { DartThrow, NumberSegment } from '../models/dart-throw';
-import { Player } from '../models/player';
+import { d, doubleBull, miss, players, s, singleBull, t } from '../../../testing/darts';
 
-// --- throw builders -------------------------------------------------------
-
-const s = (target: NumberSegment): DartThrow => ({ kind: 'single', target });
-const d = (target: NumberSegment): DartThrow => ({ kind: 'double', target });
-const t = (target: NumberSegment): DartThrow => ({ kind: 'triple', target });
-const singleBull = (): DartThrow => ({ kind: 'single', target: 'bull' });
-const doubleBull = (): DartThrow => ({ kind: 'double', target: 'bull' });
-const miss = (): DartThrow => ({ kind: 'miss' });
-
-// --- helpers --------------------------------------------------------------
-
-function players(count: number): Player[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `p${i + 1}`,
-    name: `Player ${i + 1}`,
-  }));
+function withScores(state: X01GameState, scores: Record<string, number>): X01GameState {
+  return { ...state, scores: { ...state.scores, ...scores } };
 }
 
-/** Create a game and force every player's score to `score`. */
 function gameWithScore(score: number, count = 2): X01GameState {
   const list = players(count);
-  const state = createX01Game(list);
-  for (const p of list) state.scores[p.id] = score;
-  return state;
+  const scores: Record<string, number> = {};
+  for (const player of list) {
+    scores[player.id] = score;
+  }
+  return withScores(createX01Game(list), scores);
 }
 
-/** Bracket access required by noPropertyAccessFromIndexSignature. */
 function score(state: X01GameState, playerId: string): number {
   return state.scores[playerId];
 }
@@ -44,8 +29,6 @@ function score(state: X01GameState, playerId: string): number {
 function currentPlayer(state: X01GameState): string {
   return state.playerIds[state.currentPlayerIndex];
 }
-
-// --- tests ----------------------------------------------------------------
 
 describe('createX01Game', () => {
   it('initializes players with the default starting score of 501', () => {
@@ -119,10 +102,10 @@ describe('throwDart — scoring', () => {
 describe('throwDart — busts (RULES.md)', () => {
   it('busts when the score would go below 0, reverting the turn', () => {
     const state = gameWithScore(20);
-    const { state: next, result } = throwDart(state, t(10)); // 30 > 20
+    const { state: next, result } = throwDart(state, t(10));
     expect(result.type).toBe('bust');
-    expect(score(next, 'p1')).toBe(20); // reverted
-    expect(next.currentPlayerIndex).toBe(1); // play passed on
+    expect(score(next, 'p1')).toBe(20);
+    expect(next.currentPlayerIndex).toBe(1);
     expect(next.history[0].busted).toBeTrue();
   });
 
@@ -131,9 +114,8 @@ describe('throwDart — busts (RULES.md)', () => {
     const s1 = throwDart(state, s(1)).state;
     const s2 = throwDart(s1, s(1)).state;
     expect(score(s2, 'p1')).toBe(2);
-    const { state: s3, result } = throwDart(s2, s(1)); // 2 - 1 = 1
+    const { state: s3, result } = throwDart(s2, s(1));
     expect(result.type).toBe('bust');
-    // The whole turn is reverted: score returns to its value at turn start (4).
     expect(score(s3, 'p1')).toBe(4);
   });
 
@@ -172,8 +154,7 @@ describe('throwDart — checkout / win (RULES.md)', () => {
   });
 
   it('wins on any exact 0 when double-out is off', () => {
-    const state = createX01Game(players(2), { doubleOut: false });
-    state.scores['p1'] = 20;
+    const state = withScores(createX01Game(players(2), { doubleOut: false }), { p1: 20 });
     const { state: next, result } = throwDart(state, s(20));
     expect(result.type).toBe('game_won');
     expect(next.status).toBe('finished');
@@ -184,10 +165,10 @@ describe('double-in (RULES.md)', () => {
   it('does not score darts until a double is hit on the first turn', () => {
     const state = createX01Game(players(2), { doubleIn: true });
     const s1 = throwDart(state, s(20)).state;
-    expect(score(s1, 'p1')).toBe(501); // not scored
+    expect(score(s1, 'p1')).toBe(501);
     const { state: s2, result } = throwDart(s1, d(20));
     expect(result.type).toBe('success');
-    expect(score(s2, 'p1')).toBe(461); // only the double counted
+    expect(score(s2, 'p1')).toBe(461);
   });
 
   it('ends the first turn with no score after 3 non-doubles; next turn scores freely', () => {
@@ -196,20 +177,17 @@ describe('double-in (RULES.md)', () => {
     expect(score(s1, 'p1')).toBe(501);
     expect(currentPlayer(s1)).toBe('p2');
 
-    // Player 2's first turn also requires double-in.
     const s2 = throwDart(s1, d(10)).state;
     expect(score(s2, 'p2')).toBe(481);
     const s3 = throwDart(throwDart(s2, s(1)).state, s(1)).state;
     expect(currentPlayer(s3)).toBe('p1');
 
-    // Back to player 1: first turn already completed → no double-in needed.
     const { state: s4 } = throwDart(s3, s(20));
     expect(score(s4, 'p1')).toBe(481);
   });
 
   it('allows a first-dart double to check out immediately', () => {
-    const state = createX01Game(players(2), { doubleIn: true });
-    state.scores['p1'] = 40;
+    const state = withScores(createX01Game(players(2), { doubleIn: true }), { p1: 40 });
     const { state: next, result } = throwDart(state, d(20));
     expect(result.type).toBe('game_won');
     expect(next.status).toBe('finished');
@@ -256,13 +234,13 @@ describe('undoLastThrow', () => {
 
   it('restores a busted turn so the busting dart can be undone', () => {
     const state = gameWithScore(20);
-    const busted = throwDart(state, t(10)).state; // bust, play passed to p2
+    const busted = throwDart(state, t(10)).state;
     expect(currentPlayer(busted)).toBe('p2');
 
     const { state: s1 } = undoLastThrow(busted);
     expect(currentPlayer(s1)).toBe('p1');
     expect(score(s1, 'p1')).toBe(20);
-    expect(s1.currentTurn?.throws.length).toBe(1); // the T10 is back
+    expect(s1.currentTurn?.throws.length).toBe(1);
     expect(s1.currentTurn?.busted).toBeTrue();
 
     const { state: s2 } = undoLastThrow(s1);
@@ -273,7 +251,7 @@ describe('undoLastThrow', () => {
   it('restores a completed turn across turns', () => {
     const state = createX01Game(players(2));
     const s1 = throwDart(state, s(20)).state;
-    const completed = endTurn(s1).state; // p1 done, p2 up
+    const completed = endTurn(s1).state;
     expect(currentPlayer(completed)).toBe('p2');
 
     const { state: s2 } = undoLastThrow(completed);
@@ -314,7 +292,4 @@ describe('invalid inputs', () => {
     const { result } = throwDart(won, s(20));
     expect(result.type).toBe('invalid');
   });
-
-  // A 4th dart in a turn is unreachable through the public API: the turn
-  // auto-completes after 3 darts, so the next throw starts a fresh turn.
 });

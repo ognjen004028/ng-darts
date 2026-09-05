@@ -1,4 +1,4 @@
-import { DartThrow, dartValue, isBull, isDouble } from './dart-throw';
+import { dartValue, isBull, isDouble } from './dart-throw';
 
 describe('dartValue', () => {
   it('scores a miss as 0', () => {
@@ -43,7 +43,3 @@ describe('isBull', () => {
     expect(isBull({ kind: 'miss' })).toBeFalse();
   });
 });
-
-// Re-export check keeps the DartThrow type used in this file's typing.
-const _typeCheck: DartThrow = { kind: 'single', target: 20 };
-void _typeCheck;

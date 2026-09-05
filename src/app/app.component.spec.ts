@@ -14,9 +14,9 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'darts-project' title`, () => {
+  it('renders a router outlet', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('darts-project');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
   });
 });

@@ -1,8 +1,8 @@
 import {
   CricketGameState,
+  CricketPlayerState,
   CricketTarget,
   createCricketGame,
-  currentPlayerId,
   dartMarks,
   endTurn,
   getWinner,
@@ -10,26 +10,7 @@ import {
   throwDart,
   undoLastThrow,
 } from './cricket-engine';
-import { DartThrow, NumberSegment } from '../models/dart-throw';
-import { Player } from '../models/player';
-
-// --- throw builders -------------------------------------------------------
-
-const s = (target: NumberSegment): DartThrow => ({ kind: 'single', target });
-const d = (target: NumberSegment): DartThrow => ({ kind: 'double', target });
-const t = (target: NumberSegment): DartThrow => ({ kind: 'triple', target });
-const singleBull = (): DartThrow => ({ kind: 'single', target: 'bull' });
-const doubleBull = (): DartThrow => ({ kind: 'double', target: 'bull' });
-const miss = (): DartThrow => ({ kind: 'miss' });
-
-// --- helpers --------------------------------------------------------------
-
-function players(count: number): Player[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `p${i + 1}`,
-    name: `Player ${i + 1}`,
-  }));
-}
+import { d, doubleBull, miss, players, s, singleBull, t } from '../../../testing/darts';
 
 function game(count = 2): CricketGameState {
   return createCricketGame(players(count));
@@ -43,33 +24,48 @@ function points(state: CricketGameState, playerId: string): number {
   return state.players[playerId].points;
 }
 
-function setMarks(
+function withPlayer(
   state: CricketGameState,
   playerId: string,
-  target: CricketTarget,
-  value: number,
-): void {
-  state.players[playerId].marks[String(target)] = value;
+  patch: Partial<CricketPlayerState>,
+): CricketGameState {
+  const current = state.players[playerId];
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [playerId]: {
+        marks: patch.marks ?? { ...current.marks },
+        points: patch.points ?? current.points,
+      },
+    },
+  };
 }
 
-function closeAll(state: CricketGameState, playerId: string): void {
+function closedAll(state: CricketGameState, playerId: string): CricketGameState {
+  const closed: Record<string, number> = {};
   for (const target of state.settings.targets) {
-    setMarks(state, playerId, target, 3);
+    closed[String(target)] = 3;
   }
+  return withPlayer(state, playerId, { marks: closed });
 }
 
-/** Close every target except `open`, leaving that one at 0 marks. */
-function closeAllExcept(state: CricketGameState, playerId: string, open: CricketTarget): void {
+function closedExcept(
+  state: CricketGameState,
+  playerId: string,
+  open: CricketTarget,
+): CricketGameState {
+  const closed: Record<string, number> = {};
   for (const target of state.settings.targets) {
-    setMarks(state, playerId, target, target === open ? 0 : 3);
+    closed[String(target)] = target === open ? 0 : 3;
   }
+  return withPlayer(state, playerId, { marks: closed });
 }
 
 function currentPlayer(state: CricketGameState): string {
   return state.playerIds[state.currentPlayerIndex];
 }
 
-/** Throw misses until the current turn auto-completes (3 darts) and play passes. */
 function finishTurn(state: CricketGameState): CricketGameState {
   let next = state;
   while (next.currentTurn && next.currentTurn.throws.length < 3) {
@@ -77,8 +73,6 @@ function finishTurn(state: CricketGameState): CricketGameState {
   }
   return next;
 }
-
-// --- tests ----------------------------------------------------------------
 
 describe('createCricketGame', () => {
   it('initializes all players with 0 marks on every target and 0 points', () => {
@@ -159,58 +153,54 @@ describe('throwDart — scoring (RULES.md)', () => {
 
   it('scores the dart value on a closed target while an opponent is open', () => {
     let state = game();
-    state = throwDart(state, t(20)).state; // p1 closes 20 (no score)
-    state = finishTurn(state); // p1's turn completes → p2
+    state = throwDart(state, t(20)).state;
+    state = finishTurn(state);
     expect(points(state, 'p1')).toBe(0);
 
-    state = throwDart(state, s(20)).state; // p2 leaves 20 open with 1 mark
-    state = finishTurn(state); // p2's turn completes → p1
+    state = throwDart(state, s(20)).state;
+    state = finishTurn(state);
 
-    // p1's second turn: scoring dart on the now-closed 20.
     const { state: next, result } = throwDart(state, s(20));
     expect(result.type).toBe('success');
     expect(points(next, 'p1')).toBe(20);
   });
 
   it('does not score the closing dart itself (points only on already-closed targets)', () => {
-    // Interpretation locked from RULES.md: "extra marks beyond 3 are recorded
-    // and used for scoring" — the dart that reaches 3 marks closes the target
-    // and scores nothing; scoring starts on the next dart.
     let state = game();
-    state = throwDart(state, s(20)).state; // 1 mark
-    state = throwDart(state, s(20)).state; // 2 marks
+    state = throwDart(state, s(20)).state;
+    state = throwDart(state, s(20)).state;
 
-    const { state: next } = throwDart(state, t(20)); // 2 + 3 = 5 marks, closes
+    const { state: next } = throwDart(state, t(20));
     expect(marks(next, 'p1', 20)).toBe(5);
     expect(points(next, 'p1')).toBe(0);
   });
 
   it('scores bull points with dart values 25 and 50', () => {
     let state = game();
-    state = throwDart(state, doubleBull()).state; // 2 marks
-    state = throwDart(state, singleBull()).state; // 3 marks → closed
-    state = finishTurn(state); // p1's turn completes → p2
+    state = throwDart(state, doubleBull()).state;
+    state = throwDart(state, singleBull()).state;
+    state = finishTurn(state);
 
-    state = throwDart(state, singleBull()).state; // p2: 1 mark, open
-    state = finishTurn(state); // p2's turn completes → p1
+    state = throwDart(state, singleBull()).state;
+    state = finishTurn(state);
 
-    const { state: s1 } = throwDart(state, singleBull()); // p1: 25
+    const { state: s1 } = throwDart(state, singleBull());
     expect(points(s1, 'p1')).toBe(25);
-    const { state: s2 } = throwDart(s1, doubleBull()); // p1: 50
+    const { state: s2 } = throwDart(s1, doubleBull());
     expect(points(s2, 'p1')).toBe(75);
   });
 
   it('stops scoring once every player has closed the target', () => {
     let state = game();
-    state = throwDart(state, t(20)).state; // p1 closes 20
+    state = throwDart(state, t(20)).state;
     state = throwDart(state, miss()).state;
-    state = throwDart(state, miss()).state; // p1 turn complete
-
-    state = throwDart(state, t(20)).state; // p2 closes 20 → dead
     state = throwDart(state, miss()).state;
-    state = throwDart(state, miss()).state; // p2 turn complete
 
-    const { state: next, result } = throwDart(state, t(20)); // p1: dead target
+    state = throwDart(state, t(20)).state;
+    state = throwDart(state, miss()).state;
+    state = throwDart(state, miss()).state;
+
+    const { state: next, result } = throwDart(state, t(20));
     expect(result.type).toBe('success');
     expect(points(next, 'p1')).toBe(0);
   });
@@ -243,12 +233,11 @@ describe('throwDart — turn flow', () => {
 
 describe('win conditions (RULES.md)', () => {
   it('wins immediately on closing all targets while at least tied for points', () => {
-    const state = game();
-    closeAllExcept(state, 'p1', 15);
-    state.players['p1'].points = 100;
-    state.players['p2'].points = 100;
+    let state = closedExcept(game(), 'p1', 15);
+    state = withPlayer(state, 'p1', { points: 100 });
+    state = withPlayer(state, 'p2', { points: 100 });
 
-    const { state: next, result } = throwDart(state, t(15)); // closes 15
+    const { state: next, result } = throwDart(state, t(15));
     expect(result.type).toBe('game_won');
     expect((result as { winnerId: string }).winnerId).toBe('p1');
     expect(next.status).toBe('finished');
@@ -257,34 +246,31 @@ describe('win conditions (RULES.md)', () => {
   });
 
   it('does not win on closing all targets while trailing in points', () => {
-    const state = game();
-    closeAll(state, 'p1');
-    state.players['p1'].points = 50;
-    state.players['p2'].points = 80;
+    let state = closedAll(game(), 'p1');
+    state = withPlayer(state, 'p1', { points: 50 });
+    state = withPlayer(state, 'p2', { points: 80 });
 
-    const { state: next, result } = throwDart(state, s(20)); // 50 + 20 = 70
+    const { state: next, result } = throwDart(state, s(20));
     expect(result.type).toBe('success');
     expect(isFinished(next)).toBeFalse();
   });
 
   it('wins the instant a trailing closer ties or passes the leader', () => {
-    let state = game();
-    closeAll(state, 'p1');
-    state.players['p1'].points = 50;
-    state.players['p2'].points = 80;
+    let state = closedAll(game(), 'p1');
+    state = withPlayer(state, 'p1', { points: 50 });
+    state = withPlayer(state, 'p2', { points: 80 });
 
-    state = throwDart(state, s(20)).state; // 70 — still behind
-    const { state: next, result } = throwDart(state, s(20)); // 90 — passes
+    state = throwDart(state, s(20)).state;
+    const { state: next, result } = throwDart(state, s(20));
     expect(result.type).toBe('game_won');
     expect(getWinner(next)).toBe('p1');
   });
 
   it('resolves a deadlock (all players closed) to the point leader', () => {
-    const state = game();
-    closeAll(state, 'p1');
-    closeAll(state, 'p2');
-    state.players['p1'].points = 50;
-    state.players['p2'].points = 80;
+    let state = closedAll(game(), 'p1');
+    state = closedAll(state, 'p2');
+    state = withPlayer(state, 'p1', { points: 50 });
+    state = withPlayer(state, 'p2', { points: 80 });
 
     const { state: next, result } = throwDart(state, miss());
     expect(result.type).toBe('game_won');
@@ -293,11 +279,10 @@ describe('win conditions (RULES.md)', () => {
   });
 
   it('declares a draw when a deadlock ends with equal points', () => {
-    const state = game();
-    closeAll(state, 'p1');
-    closeAll(state, 'p2');
-    state.players['p1'].points = 80;
-    state.players['p2'].points = 80;
+    let state = closedAll(game(), 'p1');
+    state = closedAll(state, 'p2');
+    state = withPlayer(state, 'p1', { points: 80 });
+    state = withPlayer(state, 'p2', { points: 80 });
 
     const { state: next, result } = throwDart(state, miss());
     expect(result.type).toBe('draw');
@@ -327,7 +312,7 @@ describe('endTurn', () => {
 describe('undoLastThrow', () => {
   it('removes the last dart mid-turn and restores marks and points', () => {
     let state = game();
-    state = throwDart(state, t(20)).state; // p1: 3 marks, closed (no score)
+    state = throwDart(state, t(20)).state;
     expect(marks(state, 'p1', 20)).toBe(3);
     expect(points(state, 'p1')).toBe(0);
 
@@ -349,7 +334,7 @@ describe('undoLastThrow', () => {
     let state = game();
     state = throwDart(state, s(20)).state;
     state = throwDart(state, s(20)).state;
-    state = throwDart(state, s(20)).state; // turn auto-completes
+    state = throwDart(state, s(20)).state;
     expect(currentPlayer(state)).toBe('p2');
 
     const { state: next } = undoLastThrow(state);
@@ -360,9 +345,8 @@ describe('undoLastThrow', () => {
   });
 
   it('rewinds a finished game back to its final turn', () => {
-    const state = game();
-    closeAllExcept(state, 'p1', 15);
-    state.players['p1'].points = 100;
+    let state = closedExcept(game(), 'p1', 15);
+    state = withPlayer(state, 'p1', { points: 100 });
     const won = throwDart(state, t(15)).state;
     expect(isFinished(won)).toBeTrue();
 
@@ -374,11 +358,10 @@ describe('undoLastThrow', () => {
   });
 
   it('rewinds a draw back to in_progress', () => {
-    const state = game();
-    closeAll(state, 'p1');
-    closeAll(state, 'p2');
-    state.players['p1'].points = 80;
-    state.players['p2'].points = 80;
+    let state = closedAll(game(), 'p1');
+    state = closedAll(state, 'p2');
+    state = withPlayer(state, 'p1', { points: 80 });
+    state = withPlayer(state, 'p2', { points: 80 });
     const drawn = throwDart(state, miss()).state;
     expect(isFinished(drawn)).toBeTrue();
     expect(drawn.winnerId).toBeNull();
@@ -396,9 +379,8 @@ describe('undoLastThrow', () => {
 
 describe('invalid inputs', () => {
   it('rejects a throw after the game is finished', () => {
-    const state = game();
-    closeAllExcept(state, 'p1', 15);
-    state.players['p1'].points = 100;
+    let state = closedExcept(game(), 'p1', 15);
+    state = withPlayer(state, 'p1', { points: 100 });
     const won = throwDart(state, t(15)).state;
 
     const { result } = throwDart(won, s(20));
@@ -406,9 +388,8 @@ describe('invalid inputs', () => {
   });
 
   it('rejects endTurn after the game is finished', () => {
-    const state = game();
-    closeAllExcept(state, 'p1', 15);
-    state.players['p1'].points = 100;
+    let state = closedExcept(game(), 'p1', 15);
+    state = withPlayer(state, 'p1', { points: 100 });
     const won = throwDart(state, t(15)).state;
 
     const { result } = endTurn(won);

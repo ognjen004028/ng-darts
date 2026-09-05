@@ -36,8 +36,8 @@ describe('GameActionsComponent', () => {
   });
 
   it('disables buttons per the input flags', () => {
-    component.undoDisabled = true;
-    component.endTurnDisabled = true;
+    fixture.componentRef.setInput('undoDisabled', true);
+    fixture.componentRef.setInput('endTurnDisabled', true);
     fixture.detectChanges();
 
     const buttons = Array.from(

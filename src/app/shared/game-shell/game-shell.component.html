@@ -1,0 +1,31 @@
+@if (finished()) {
+  <div class="winner-banner">
+    @if (winnerName(); as name) {
+      <h2><span aria-hidden="true">🎯</span> {{ name }} wins!</h2>
+    } @else if (draw()) {
+      <h2><span aria-hidden="true">🤝</span> Draw!</h2>
+    }
+    <button type="button" (click)="newGame.emit()">New game</button>
+  </div>
+} @else {
+  <p class="current-player">
+    Up next: <strong>{{ currentPlayerName() }}</strong>
+  </p>
+}
+
+@if (message(); as msg) {
+  <p class="message" aria-live="polite">{{ msg }}</p>
+}
+
+<ng-content />
+
+<app-turn-summary [turn]="turn()" />
+
+<app-dart-input [disabled]="finished()" (dartThrow)="dartThrow.emit($event)" />
+
+<app-game-actions
+  [undoDisabled]="undoDisabled()"
+  [endTurnDisabled]="endTurnDisabled()"
+  (undo)="undo.emit()"
+  (endTurn)="endTurn.emit()"
+/>

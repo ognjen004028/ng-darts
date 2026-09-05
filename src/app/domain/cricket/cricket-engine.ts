@@ -6,7 +6,7 @@
  * result; the UI never re-implements rules.
  */
 import { DartThrow, NumberSegment, dartValue } from '../models/dart-throw';
-import { Turn } from '../models/turn';
+import { DARTS_PER_TURN, Turn } from '../models/turn';
 import { Player } from '../models/player';
 
 export type CricketTarget = NumberSegment | 'bull';
@@ -143,8 +143,11 @@ export function throwDart(state: CricketGameState, dart: DartThrow): CricketOutc
     startPoints: state.players[playerId].points,
   };
 
-  if (turn.throws.length >= 3) {
-    return { state, result: { type: 'invalid', reason: 'Turn already has 3 darts' } };
+  if (turn.throws.length >= DARTS_PER_TURN) {
+    return {
+      state,
+      result: { type: 'invalid', reason: `Turn already has ${DARTS_PER_TURN} darts` },
+    };
   }
 
   const throws = [...turn.throws, dart];
@@ -170,9 +173,9 @@ export function throwDart(state: CricketGameState, dart: DartThrow): CricketOutc
   const finished = resolveFinish(next, playerId);
   if (finished) return finished;
 
-  // The turn automatically ends after the 3rd dart (RULES.md).
-  if (throws.length === 3) {
-    return completeTurn(next, playerId, events);
+  // The turn automatically ends after the last dart (RULES.md).
+  if (throws.length === DARTS_PER_TURN) {
+    return completeTurn(next, events);
   }
   return { state: next, result: { type: 'success', events } };
 }
@@ -186,8 +189,7 @@ export function endTurn(state: CricketGameState): CricketOutcome {
     return { state, result: { type: 'invalid', reason: 'No darts thrown in the current turn' } };
   }
 
-  const playerId = currentPlayerId(state);
-  return completeTurn(state, playerId, []);
+  return completeTurn(state, []);
 }
 
 export function undoLastThrow(state: CricketGameState): CricketOutcome {
@@ -266,9 +268,7 @@ function applyDart(
 
 /** True while at least one opponent has the target open (< 3 marks). */
 function opponentHasOpen(state: CricketGameState, playerId: string, key: string): boolean {
-  return state.playerIds.some(
-    (id) => id !== playerId && (state.players[id].marks[key] ?? 0) < 3,
-  );
+  return state.playerIds.some((id) => id !== playerId && (state.players[id].marks[key] ?? 0) < 3);
 }
 
 function allTargetsClosed(state: CricketGameState, playerId: string): boolean {
@@ -333,11 +333,7 @@ function finishGame(state: CricketGameState, result: CricketResult): CricketOutc
   return { state: next, result };
 }
 
-function completeTurn(
-  state: CricketGameState,
-  playerId: string,
-  events: CricketEvent[],
-): CricketOutcome {
+function completeTurn(state: CricketGameState, events: CricketEvent[]): CricketOutcome {
   const turn = state.currentTurn;
   if (!turn) {
     return { state, result: { type: 'invalid', reason: 'No current turn' } };

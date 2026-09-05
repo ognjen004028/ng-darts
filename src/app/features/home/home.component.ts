@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AddPlayersComponent } from '../../shared/add-players/add-players.component';
@@ -12,6 +12,7 @@ import { GameSessionService } from '../../state/game-session.service';
   imports: [FormsModule, AddPlayersComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
   private readonly router = inject(Router);
@@ -19,25 +20,18 @@ export class HomeComponent {
 
   players: Player[] = [];
 
-  gamemodes: GameMode[] = ['cricket', 'x01'];
+  gameModes: GameMode[] = ['cricket', 'x01'];
   x01Scores: X01Settings['startingScore'][] = [301, 501, 701];
 
-  selectedGamemode: GameMode = this.gamemodes[0];
+  selectedGamemode: GameMode = this.gameModes[0];
   selectedX01Score: X01Settings['startingScore'] = this.x01Scores[1];
-
-  /** True once Start was pressed with no players — drives the validation hint. */
-  startAttempted = false;
 
   onPlayersChange(players: Player[]): void {
     this.players = players;
   }
 
   startGame(): void {
-    if (this.players.length === 0) {
-      this.startAttempted = true;
-      return;
-    }
-    this.startAttempted = false;
+    if (this.players.length === 0) return;
 
     const settings: Partial<X01Settings> =
       this.selectedGamemode === 'x01' ? { startingScore: this.selectedX01Score } : {};

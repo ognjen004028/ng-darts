@@ -62,7 +62,7 @@ describe('DartInputComponent', () => {
   });
 
   it('disables all buttons when disabled', () => {
-    component.disabled = true;
+    fixture.componentRef.setInput('disabled', true);
     fixture.detectChanges();
     const native = fixture.nativeElement as HTMLElement;
     const buttons = Array.from(native.querySelectorAll('button'));

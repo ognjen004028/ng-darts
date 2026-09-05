@@ -1,14 +1,15 @@
 <h1>Home</h1>
 
-<h3>Pick a gamemode:</h3>
-<select [(ngModel)]="selectedGamemode">
-  @for (mode of gamemodes; track mode) {
+<label for="gamemode">Pick a gamemode</label>
+<select id="gamemode" [(ngModel)]="selectedGamemode">
+  @for (mode of gameModes; track mode) {
     <option [value]="mode">{{ mode }}</option>
   }
 </select>
 
-@if (selectedGamemode === "x01") {
-  <select [(ngModel)]="selectedX01Score">
+@if (selectedGamemode === 'x01') {
+  <label for="x01-score">Starting score</label>
+  <select id="x01-score" [(ngModel)]="selectedX01Score">
     @for (score of x01Scores; track score) {
       <option [value]="score">{{ score }}</option>
     }
@@ -17,7 +18,4 @@
 
 <app-add-players (playersChange)="onPlayersChange($event)" />
 
-<button (click)="startGame()" [disabled]="players.length === 0">Start game</button>
-@if (startAttempted && players.length === 0) {
-  <p>Add at least one player to start.</p>
-}
+<button type="button" (click)="startGame()" [disabled]="players.length === 0">Start game</button>

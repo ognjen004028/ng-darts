@@ -38,7 +38,6 @@ describe('HomeComponent', () => {
 
     expect(session.hasSession()).toBe(false);
     expect(router.navigate).not.toHaveBeenCalled();
-    expect(component.startAttempted).toBe(true);
   });
 
   it('starts an x01 session and navigates to the x01 game route', () => {

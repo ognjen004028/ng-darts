@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Player } from '../../domain/models/player';
 import { GameSessionService } from '../../state/game-session.service';
 import { X01GameComponent } from './x01-game.component';
+import { throwAll, x01BustFrom301, x01CheckoutFrom301 } from '../../../testing/darts';
 
 describe('X01GameComponent', () => {
   let component: X01GameComponent;
@@ -71,13 +72,9 @@ describe('X01GameComponent', () => {
   });
 
   it('shows a bust message and lets undo hand play back', () => {
-    session.startGame('x01', players);
+    session.startGame('x01', players, { startingScore: 301 });
     fixture.detectChanges();
-    const state = session.x01GameState();
-    if (!state) throw new Error('expected game state');
-    state.scores['p1'] = 20;
-
-    component.onDart({ kind: 'triple', target: 10 }); // 30 > 20 → bust
+    throwAll((dart) => component.onDart(dart), x01BustFrom301);
 
     fixture.detectChanges();
     expect(component.message()).toContain('Bust');
@@ -89,39 +86,17 @@ describe('X01GameComponent', () => {
     expect(session.x01GameState()?.currentTurn?.throws.length).toBe(1);
   });
 
-  it('shows a winner banner and disables the dart input on checkout', () => {
-    session.startGame('x01', players);
-    fixture.detectChanges();
-    const state = session.x01GameState();
-    if (!state) throw new Error('expected game state');
-    state.scores['p1'] = 40;
-
-    component.onDart({ kind: 'double', target: 20 });
-
-    fixture.detectChanges();
-    const native = fixture.nativeElement as HTMLElement;
-    expect(native.querySelector('.winner-banner')?.textContent).toContain('Ada wins!');
-    const dartButtons = Array.from(native.querySelectorAll('app-dart-input button'));
-    expect(dartButtons.length).toBeGreaterThan(0);
-    expect(dartButtons.every((b) => (b as HTMLButtonElement).disabled)).toBeTrue();
-  });
-
-  it('can play a full 301 game to completion with no refresh', () => {
+  it('can play a 301 game to a double checkout', () => {
     session.startGame('x01', [{ id: 'p1', name: 'Ada' }], { startingScore: 301 });
     fixture.detectChanges();
-
-    // 4 × T20 = 240 → 61; T15 = 45 → 16; D8 = 16 → valid double checkout.
-    for (let i = 0; i < 4; i++) {
-      component.onDart({ kind: 'triple', target: 20 });
-    }
-    component.onDart({ kind: 'triple', target: 15 });
-    component.onDart({ kind: 'double', target: 8 });
+    throwAll((dart) => component.onDart(dart), x01CheckoutFrom301);
 
     fixture.detectChanges();
     expect(session.status()).toBe('finished');
     expect(session.winnerId()).toBe('p1');
-    expect((fixture.nativeElement as HTMLElement).querySelector('.winner-banner')?.textContent)
-      .toContain('Ada wins!');
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.winner-banner')?.textContent,
+    ).toContain('Ada wins!');
   });
 
   it('new game resets the session and returns home', () => {

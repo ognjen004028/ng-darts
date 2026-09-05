@@ -35,7 +35,7 @@ describe('TurnSummaryComponent', () => {
         { kind: 'double', target: 'bull' },
       ],
     };
-    component.turn = turn;
+    fixture.componentRef.setInput('turn', turn);
     fixture.detectChanges();
 
     const native = fixture.nativeElement as HTMLElement;
@@ -47,10 +47,10 @@ describe('TurnSummaryComponent', () => {
   });
 
   it('fills only the slots that have darts', () => {
-    component.turn = {
+    fixture.componentRef.setInput('turn', {
       playerId: 'p1',
       throws: [{ kind: 'miss' }],
-    };
+    });
     fixture.detectChanges();
 
     const native = fixture.nativeElement as HTMLElement;

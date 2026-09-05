@@ -6,7 +6,7 @@
  * result; the UI never re-implements rules.
  */
 import { DartThrow, dartValue, isDouble } from '../models/dart-throw';
-import { Turn } from '../models/turn';
+import { DARTS_PER_TURN, Turn } from '../models/turn';
 import { Player } from '../models/player';
 
 export interface X01Settings {
@@ -49,10 +49,7 @@ export interface X01GameState {
 }
 
 export type X01Event =
-  | { type: 'turn_completed' }
-  | { type: 'bust' }
-  | { type: 'double_in' }
-  | { type: 'checkout' };
+  { type: 'turn_completed' } | { type: 'bust' } | { type: 'double_in' } | { type: 'checkout' };
 
 export type X01Result =
   | { type: 'success'; events: X01Event[] }
@@ -128,8 +125,11 @@ export function throwDart(state: X01GameState, dart: DartThrow): X01Outcome {
     doubleInHit: false,
   };
 
-  if (turn.throws.length >= 3) {
-    return { state, result: { type: 'invalid', reason: 'Turn already has 3 darts' } };
+  if (turn.throws.length >= DARTS_PER_TURN) {
+    return {
+      state,
+      result: { type: 'invalid', reason: `Turn already has ${DARTS_PER_TURN} darts` },
+    };
   }
 
   const throws = [...turn.throws, dart];
@@ -157,11 +157,14 @@ export function throwDart(state: X01GameState, dart: DartThrow): X01Outcome {
     currentTurn: updated,
   };
 
-  // The turn automatically ends after the 3rd dart (RULES.md).
-  if (throws.length === 3) {
-    return completeTurn(next, playerId);
+  // The turn automatically ends after the last dart (RULES.md).
+  if (throws.length === DARTS_PER_TURN) {
+    return completeTurn(next);
   }
-  return { state: next, result: { type: 'success', events: successEvents(updated, doubleInRequired) } };
+  return {
+    state: next,
+    result: { type: 'success', events: successEvents(updated, doubleInRequired) },
+  };
 }
 
 export function endTurn(state: X01GameState): X01Outcome {
@@ -178,7 +181,7 @@ export function endTurn(state: X01GameState): X01Outcome {
     ...state,
     scores: { ...state.scores, [playerId]: turn.busted ? turn.startScore : turn.endScore },
   };
-  return completeTurn(next, playerId);
+  return completeTurn(next);
 }
 
 export function undoLastThrow(state: X01GameState): X01Outcome {
@@ -246,11 +249,7 @@ function turnDelta(
   return { delta, doubleInHit };
 }
 
-function computeTurn(
-  turn: X01Turn,
-  settings: X01Settings,
-  doubleInRequired: boolean,
-): X01Turn {
+function computeTurn(turn: X01Turn, settings: X01Settings, doubleInRequired: boolean): X01Turn {
   const { delta, doubleInHit } = turnDelta(turn.throws, doubleInRequired);
   return {
     ...turn,
@@ -271,7 +270,7 @@ function bustTurn(state: X01GameState, turn: X01Turn, playerId: string): X01Outc
     scores: { ...state.scores, [playerId]: turn.startScore },
     currentTurn: bustedTurn,
   };
-  return completeTurn(next, playerId, {
+  return completeTurn(next, {
     type: 'bust',
     events: [{ type: 'bust' }],
   });
@@ -292,11 +291,7 @@ function finishGame(state: X01GameState, turn: X01Turn, winnerId: string): X01Ou
   };
 }
 
-function completeTurn(
-  state: X01GameState,
-  playerId: string,
-  result?: X01Result,
-): X01Outcome {
+function completeTurn(state: X01GameState, result?: X01Result): X01Outcome {
   const turn = state.currentTurn;
   if (!turn) {
     return { state, result: { type: 'invalid', reason: 'No current turn' } };

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 /**
  * Game action buttons shared by game screens (ROADMAP 3.3): Undo and
@@ -9,11 +9,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   imports: [],
   templateUrl: './game-actions.component.html',
   styleUrl: './game-actions.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameActionsComponent {
-  @Input() undoDisabled = false;
-  @Input() endTurnDisabled = false;
+  readonly undoDisabled = input(false);
+  readonly endTurnDisabled = input(false);
 
-  @Output() undo = new EventEmitter<void>();
-  @Output() endTurn = new EventEmitter<void>();
+  readonly undo = output<void>();
+  readonly endTurn = output<void>();
 }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { DartThrow, NumberSegment } from '../../domain/models/dart-throw';
 
 export type DartMultiplier = 'single' | 'double' | 'triple';
@@ -14,6 +14,7 @@ export type DartMultiplier = 'single' | 'double' | 'triple';
   imports: [],
   templateUrl: './dart-input.component.html',
   styleUrl: './dart-input.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DartInputComponent {
   readonly multipliers: DartMultiplier[] = ['single', 'double', 'triple'];
@@ -22,18 +23,18 @@ export class DartInputComponent {
     (_, i) => (i + 1) as NumberSegment,
   );
 
-  multiplier: DartMultiplier = 'single';
+  readonly multiplier = signal<DartMultiplier>('single');
 
-  @Input() disabled = false;
+  readonly disabled = input(false);
 
-  @Output() dartThrow = new EventEmitter<DartThrow>();
+  readonly dartThrow = output<DartThrow>();
 
   selectMultiplier(multiplier: DartMultiplier): void {
-    this.multiplier = multiplier;
+    this.multiplier.set(multiplier);
   }
 
   throwSegment(segment: NumberSegment): void {
-    switch (this.multiplier) {
+    switch (this.multiplier()) {
       case 'single':
         this.dartThrow.emit({ kind: 'single', target: segment });
         break;

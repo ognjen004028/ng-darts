@@ -3,15 +3,30 @@
 <ul>
   @for (player of players; track player.id) {
     <li>
-      <input type="text" [(ngModel)]="player.name" />
+      <label [attr.for]="'player-name-' + player.id" class="visually-hidden">
+        Name for {{ player.name }}
+      </label>
+      <input
+        type="text"
+        [id]="'player-name-' + player.id"
+        [ngModel]="player.name"
+        (ngModelChange)="onNameChange(player.id, $event)"
+      />
       @if (players.length > 1) {
-        <button type="button" (click)="removePlayer(player.id)">Remove</button>
+        <button
+          type="button"
+          (click)="removePlayer(player.id)"
+          [attr.aria-label]="'Remove ' + player.name"
+        >
+          Remove
+        </button>
       }
     </li>
   }
 </ul>
 
 @if (players.length < maxPlayers) {
-  <input [(ngModel)]="newPlayerName" placeholder="Player name" />
+  <label for="new-player-name">Player name</label>
+  <input id="new-player-name" [(ngModel)]="newPlayerName" />
   <button type="button" (click)="addPlayer()">Add player</button>
 }

@@ -11,7 +11,7 @@ import { gameSessionGuard } from './game-session.guard';
 describe('gameSessionGuard', () => {
   let router: Router;
   let session: GameSessionService;
-  const route = {} as ActivatedRouteSnapshot;
+  const route = { data: { mode: 'x01' } } as unknown as ActivatedRouteSnapshot;
   const state = {} as RouterStateSnapshot;
 
   /** Guards are only invoked inside an injection context by the router. */
@@ -39,6 +39,12 @@ describe('gameSessionGuard', () => {
   it('redirects to home after the session is reset', () => {
     session.startGame('x01', [{ id: 'p1', name: 'Ada' }]);
     session.reset();
+
+    expect(runGuard()).toEqual(router.createUrlTree(['/']));
+  });
+
+  it('redirects to home when the session mode does not match the route', () => {
+    session.startGame('cricket', [{ id: 'p1', name: 'Ada' }]);
 
     expect(runGuard()).toEqual(router.createUrlTree(['/']));
   });

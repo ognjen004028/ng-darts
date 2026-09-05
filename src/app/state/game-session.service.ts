@@ -1,14 +1,10 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Player } from '../domain/models/player';
 import { DartThrow } from '../domain/models/dart-throw';
-import {
-  GameSession as GameSessionShell,
-  GameMode,
-  GameStatus,
-} from '../domain/models/game';
+import { GameMode, GameStatus } from '../domain/models/game';
 import {
   X01GameState,
-  X01Result,
+  X01Outcome,
   X01Settings,
   createX01Game,
   endTurn as engineEndTurn,
@@ -17,7 +13,7 @@ import {
 } from '../domain/x01/x01-engine';
 import {
   CricketGameState,
-  CricketResult,
+  CricketOutcome,
   CricketSettings,
   createCricketGame,
   endTurn as cricketEndTurn,
@@ -26,22 +22,28 @@ import {
 } from '../domain/cricket/cricket-engine';
 
 /** Union of engine results returned by the mode-dispatched game actions. */
-export type GameActionResult = X01Result | CricketResult;
+export type GameActionResult = X01Outcome['result'] | CricketOutcome['result'];
 
 /**
- * Active match session: the domain shell composed with mode-specific
- * settings and live engine state.
+ * Active match session: one mode, with that mode's settings and live engine state.
  */
-export interface ActiveSession extends GameSessionShell {
-  /** Resolved X01 settings, or null while playing Cricket. */
-  x01Settings: X01Settings | null;
-  /** Resolved Cricket settings, or null while playing X01. */
-  cricketSettings: CricketSettings | null;
-  /** Live X01 game state, or null while playing Cricket. */
-  x01GameState: X01GameState | null;
-  /** Live Cricket game state, or null while playing X01. */
-  cricketGameState: CricketGameState | null;
-}
+export type ActiveSession =
+  | {
+      mode: 'x01';
+      players: Player[];
+      status: GameStatus;
+      winnerId: string | null;
+      settings: X01Settings;
+      gameState: X01GameState;
+    }
+  | {
+      mode: 'cricket';
+      players: Player[];
+      status: GameStatus;
+      winnerId: string | null;
+      settings: CricketSettings;
+      gameState: CricketGameState;
+    };
 
 /**
  * Single source of truth for the in-progress match (ROADMAP 2.1).
@@ -55,16 +57,22 @@ export class GameSessionService {
   readonly mode = computed<GameMode | null>(() => this.session()?.mode ?? null);
   readonly status = computed<GameStatus | null>(() => this.session()?.status ?? null);
   readonly winnerId = computed<string | null>(() => this.session()?.winnerId ?? null);
-  readonly x01Settings = computed<X01Settings | null>(() => this.session()?.x01Settings ?? null);
-  readonly cricketSettings = computed<CricketSettings | null>(
-    () => this.session()?.cricketSettings ?? null,
-  );
-  readonly x01GameState = computed<X01GameState | null>(
-    () => this.session()?.x01GameState ?? null,
-  );
-  readonly cricketGameState = computed<CricketGameState | null>(
-    () => this.session()?.cricketGameState ?? null,
-  );
+  readonly x01Settings = computed<X01Settings | null>(() => {
+    const session = this.session();
+    return session?.mode === 'x01' ? session.settings : null;
+  });
+  readonly cricketSettings = computed<CricketSettings | null>(() => {
+    const session = this.session();
+    return session?.mode === 'cricket' ? session.settings : null;
+  });
+  readonly x01GameState = computed<X01GameState | null>(() => {
+    const session = this.session();
+    return session?.mode === 'x01' ? session.gameState : null;
+  });
+  readonly cricketGameState = computed<CricketGameState | null>(() => {
+    const session = this.session();
+    return session?.mode === 'cricket' ? session.gameState : null;
+  });
 
   /** True once a game has been started — guards `/game/*` routes. */
   readonly hasSession = computed(() => this.session() !== null);
@@ -75,31 +83,29 @@ export class GameSessionService {
       throw new Error('startGame requires at least one player');
     }
 
+    const orderedPlayers = players.map((player, index) => ({ ...player, order: index }));
+
     if (mode === 'x01') {
-      const gameState = createX01Game(players, settings);
+      const gameState = createX01Game(orderedPlayers, settings);
       this.session.set({
         mode,
-        players: [...players],
+        players: orderedPlayers,
         status: gameState.status,
         winnerId: gameState.winnerId,
-        x01Settings: gameState.settings,
-        cricketSettings: null,
-        x01GameState: gameState,
-        cricketGameState: null,
+        settings: gameState.settings,
+        gameState,
       });
       return;
     }
 
-    const gameState = createCricketGame(players);
+    const gameState = createCricketGame(orderedPlayers);
     this.session.set({
       mode,
-      players: [...players],
+      players: orderedPlayers,
       status: gameState.status,
       winnerId: gameState.winnerId,
-      x01Settings: null,
-      cricketSettings: gameState.settings,
-      x01GameState: null,
-      cricketGameState: gameState,
+      settings: gameState.settings,
+      gameState,
     });
   }
 
@@ -110,62 +116,20 @@ export class GameSessionService {
 
   /** Apply a dart in the active game. Returns the engine result, or null when no game is active. */
   applyThrow(dart: DartThrow): GameActionResult | null {
-    const session = this.session();
-    if (!session) return null;
-
-    if (session.mode === 'x01') {
-      const state = session.x01GameState;
-      if (!state) return null;
-      const outcome = engineThrowDart(state, dart);
-      this.updateX01GameState(outcome.state);
-      return outcome.result;
-    }
-
-    const state = session.cricketGameState;
-    if (!state) return null;
-    const outcome = cricketThrowDart(state, dart);
-    this.updateCricketGameState(outcome.state);
-    return outcome.result;
+    return this.runEngine(
+      (state) => engineThrowDart(state, dart),
+      (state) => cricketThrowDart(state, dart),
+    );
   }
 
   /** End the current turn. Returns the engine result, or null when no game is active. */
   endTurn(): GameActionResult | null {
-    const session = this.session();
-    if (!session) return null;
-
-    if (session.mode === 'x01') {
-      const state = session.x01GameState;
-      if (!state) return null;
-      const outcome = engineEndTurn(state);
-      this.updateX01GameState(outcome.state);
-      return outcome.result;
-    }
-
-    const state = session.cricketGameState;
-    if (!state) return null;
-    const outcome = cricketEndTurn(state);
-    this.updateCricketGameState(outcome.state);
-    return outcome.result;
+    return this.runEngine(engineEndTurn, cricketEndTurn);
   }
 
   /** Undo the last dart (including busted / winning / drawn turns). Returns the engine result, or null when no game is active. */
   undoLastThrow(): GameActionResult | null {
-    const session = this.session();
-    if (!session) return null;
-
-    if (session.mode === 'x01') {
-      const state = session.x01GameState;
-      if (!state) return null;
-      const outcome = engineUndoLastThrow(state);
-      this.updateX01GameState(outcome.state);
-      return outcome.result;
-    }
-
-    const state = session.cricketGameState;
-    if (!state) return null;
-    const outcome = cricketUndoLastThrow(state);
-    this.updateCricketGameState(outcome.state);
-    return outcome.result;
+    return this.runEngine(engineUndoLastThrow, cricketUndoLastThrow);
   }
 
   /** Clear the session (new game / leaving a match). */
@@ -173,27 +137,31 @@ export class GameSessionService {
     this.session.set(null);
   }
 
-  /** Write back X01 engine state and mirror status/winner on the session shell. */
-  private updateX01GameState(state: X01GameState): void {
-    const current = this.session();
-    if (!current) return;
-    this.session.set({
-      ...current,
-      status: state.status,
-      winnerId: state.winnerId,
-      x01GameState: state,
-    });
-  }
+  private runEngine(
+    x01: (state: X01GameState) => X01Outcome,
+    cricket: (state: CricketGameState) => CricketOutcome,
+  ): GameActionResult | null {
+    const session = this.session();
+    if (!session) return null;
 
-  /** Write back Cricket engine state and mirror status/winner on the session shell. */
-  private updateCricketGameState(state: CricketGameState): void {
-    const current = this.session();
-    if (!current) return;
+    if (session.mode === 'x01') {
+      const outcome = x01(session.gameState);
+      this.session.set({
+        ...session,
+        status: outcome.state.status,
+        winnerId: outcome.state.winnerId,
+        gameState: outcome.state,
+      });
+      return outcome.result;
+    }
+
+    const outcome = cricket(session.gameState);
     this.session.set({
-      ...current,
-      status: state.status,
-      winnerId: state.winnerId,
-      cricketGameState: state,
+      ...session,
+      status: outcome.state.status,
+      winnerId: outcome.state.winnerId,
+      gameState: outcome.state,
     });
+    return outcome.result;
   }
 }

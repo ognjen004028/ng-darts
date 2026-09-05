@@ -1,1 +1,43 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --color-primary: #2b6cb0;
+  --color-primary-contrast: #fff;
+  --color-border: #ccc;
+  --color-surface: #fff;
+  --color-active: #eef4ff;
+  --color-winner-bg: #e8ffe8;
+  --color-winner-border: #9bd39b;
+  --color-message: #b45309;
+  --color-text: #222;
+  --color-muted: #888;
+  --color-slot-border: #aaa;
+  --color-slot-fill: #f0f0f0;
+  --color-closed: #1a7f37;
+  --color-row-border: #eee;
+  --color-points-border: #ddd;
+  --radius-button: 0.35rem;
+  --radius-banner: 0.5rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.winner-banner {
+  padding: 1rem;
+  background: var(--color-winner-bg);
+  border: 1px solid var(--color-winner-border);
+  border-radius: var(--radius-banner);
+}
+
+.message {
+  color: var(--color-message);
+  font-style: italic;
+}

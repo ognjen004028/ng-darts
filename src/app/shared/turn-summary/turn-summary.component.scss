@@ -9,14 +9,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed #aaa;
+  border: 1px dashed var(--color-slot-border);
   border-radius: 50%;
-  color: #888;
+  color: var(--color-muted);
   font-weight: 600;
 
   &.filled {
     border-style: solid;
-    color: #222;
-    background: #f0f0f0;
+    color: var(--color-text);
+    background: var(--color-slot-fill);
   }
 }

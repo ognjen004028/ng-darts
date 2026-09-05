@@ -2,7 +2,7 @@ import { Player } from './player';
 
 export type GameMode = 'cricket' | 'x01';
 
-export type GameStatus = 'setup' | 'in_progress' | 'finished';
+export type GameStatus = 'in_progress' | 'finished';
 
 /**
  * Minimal session shell. Mode-specific game state (e.g. `X01GameState`)
