@@ -146,7 +146,10 @@ export function throwDart(state: X01GameState, dart: DartThrow): X01Outcome {
     // Landed on 0 with a non-double while double-out is on → bust.
     return bustTurn(state, updated, playerId);
   }
-  if (newScore < 0 || newScore === 1) {
+  if (newScore < 0) {
+    return bustTurn(state, updated, playerId);
+  }
+  if (newScore === 1 && state.settings.doubleOut) {
     return bustTurn(state, updated, playerId);
   }
 

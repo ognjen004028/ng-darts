@@ -1,7 +1,7 @@
 # Darts Scoring App — Rules (locked)
 
 > Authoritative rule set for v1. Engines implement exactly what is written here;
-> the UI never re-implements rules. Decisions resolve the open questions in `architecture.md`.
+> the UI never re-implements rules. Locked decisions are listed at the end of this file.
 
 ---
 
@@ -12,6 +12,8 @@
 - Turn order is **fixed rotation** by player order (as added in setup), starting with the first player.
 - Each turn consists of up to **3 darts**. The turn automatically ends after the 3rd dart
   (or immediately on a checkout / bust / game end).
+- A player may end a turn after 1 dart or 2 darts. End turn is not valid when the turn
+  has 0 darts.
 - **No turn limit** — the game lasts as many rounds as it takes (no 15-round cap like some
   machines enforce). A bust or missed turn never advances a global round counter.
 - **Undo** reverts the last thrown dart, including a full busted turn.
@@ -47,9 +49,13 @@
 ### Bust (turn reverted)
 A turn is **busted** — all darts of the turn are reverted and play passes to the next player — when:
 1. Remaining score would go **below 0**.
-2. Remaining score would reach **exactly 1** (impossible to finish from 1).
+2. Double out is **On**, and remaining score would reach **exactly 1**.
 3. Remaining score would reach **0** with a throw that is not a valid checkout
    (i.e. the winning dart is not a double, when double out is On).
+
+When double out is **Off**:
+- Bust only when remaining score would go **below 0**.
+- A player can check out on **0** with any dart (including S1).
 
 ### Double in (when On)
 - Applies to each player's **first turn of the game**.
@@ -82,6 +88,8 @@ A turn is **busted** — all darts of the turn are reverted and play passes to t
 ### Scoring (standard)
 - A player scores **points only on targets they have closed** (≥3 marks), and **only while at least
   one opponent still has that target open** (< 3 marks).
+- The dart that **closes** a target does not score points. Later darts on that target score
+  only while an opponent still has the target open.
 - Points equal the total dart value on a closed target: single = segment number,
   double = 2×, triple = 3×, inner bull = 50, outer bull = 25.
 - Once **every** player has closed a target, it is dead: no further points are scored on it by anyone.
@@ -97,13 +105,14 @@ A turn is **busted** — all darts of the turn are reverted and play passes to t
 
 ---
 
-## Decided open questions (from `architecture.md`)
+## Locked decisions
 
 | Question | Decision |
 |----------|----------|
 | X01 default starting score | 501 |
 | X01 double in default | Off |
 | X01 double out default | On |
+| X01 bust on remaining 1 | Only when double out is On |
 | X01 bull for checkout | Inner bull (50) counts as D25; outer bull (25) does not |
 | Cricket scoring variant | Standard (not cut-throat) |
 | Cricket points only when opponent open | Yes |
