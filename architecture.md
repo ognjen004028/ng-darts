@@ -1,17 +1,21 @@
 # Darts Scoring App — Architecture Reference
 
 > Reference doc for project structure, conventions, and evolution beyond MVP.  
-> Stack: **Angular 19**, standalone components, signals-friendly.
+> Stack: **Angular 19**, standalone components, signals-friendly.  
+> End goal: wrap this web app with **Capacitor** and ship it as a phone app (Android first).
+>
+> Locked game rules live in [`RULES.md`](./RULES.md). The feature plan lives in [`ROADMAP.md`](./ROADMAP.md).
 
 ---
 
 ## Goals
 
 - Home page: choose game mode (Cricket or X01)
-- X01: secondary choice for starting score (301 / 501 / 701)
+- X01: starting score (301 / 501 / 701). Double in / double out exist on the engine; Home exposes them in Phase 5.1b
 - Up to **4 addable players** per match
-- Pass-and-play on a single device (MVP)
+- Pass-and-play on a single device (MVP in the browser, then the same UI on a phone)
 - Domain rules in **pure TypeScript** (testable, backend-agnostic later)
+- Ship as a native-shell app with **Capacitor** (Phase 6). No backend for local play.
 
 ---
 
@@ -48,7 +52,7 @@ src/app/
 |--------|---------|----------|
 | `core/` | One-instance app infrastructure | Route guards, future HTTP interceptors, app config |
 | `shared/` | Reusable UI used on multiple pages | `add-players`, dart input, scoreboard rows |
-| `domain/` | Business types & rule engines | `Player`, `applyThrow()`, bust logic |
+| `domain/` | Business types & rule engines | `Player`, `throwDart()`, bust logic |
 | `features/` | Full pages loaded by the router | Home, game screens |
 | `state/` | Active match/session on the client | `GameSessionService` |
 
@@ -79,11 +83,15 @@ Home owns setup. There is no dedicated setup route.
   → /game/cricket-game  OR  /game/x01-game
 ```
 
-### Guards (recommended before game routes)
+### Guards
 
-- Block `/game/*` if no valid session (no players or game not initialized)
+Implemented in `core/guards/game-session.guard.ts`:
+
+- Block `/game/*` if there is no valid session
 - Block a game route when the session mode does not match the route
 - Redirect to `/`
+
+The session lives in memory. A page refresh clears it, so `/game/*` redirects to Home until Phase 5.2 persistence.
 
 ### Root shell
 
@@ -102,57 +110,71 @@ Pure TypeScript interfaces/types — no Angular.
 ### Shared
 
 - **Player** — `id`, `name`, `order` (optional turn index)
-- **DartThrow** — `segment` (1-20 | bull), `multiplier` (1 | 2 | 3)
-- **Turn** — `playerId`, `throws[]` (max 3)
+- **DartThrow** — discriminated union in `domain/models/dart-throw.ts`:
+  - `{ kind: 'miss' }`
+  - `{ kind: 'single'; target: DartTarget }`
+  - `{ kind: 'double'; target: DartTarget }`
+  - `{ kind: 'triple'; target: NumberSegment }`
+  - Triple bull is not representable
+- **Turn** — `playerId`, `throws[]` (max 3). Engines extend this (`X01Turn`, `CricketTurn`)
 - **GameMode** — `'cricket' | 'x01'`
-- **GameSession** — mode, players, settings, active game state, status (`in_progress | finished`)
+- **GameSession** — thin shell in `domain/models/game.ts`: `mode`, `players`, `status` (`in_progress | finished`), `winnerId`
+- **ActiveSession** — the live match in `state/game-session.service.ts`: shell fields plus mode-specific `settings` and `gameState`
 
 ### Settings
 
-**Cricket**
+**Cricket** (`CricketSettings` on the engine)
 
-- Targets: 15-20 + bull (fixed for v1)
-- Scoring variant: decide early (standard vs cut-throat)
+- Targets: 15–20 + bull (fixed for v1)
+- Scoring: standard only (not cut-throat). See [`RULES.md`](./RULES.md)
 
-**X01**
+**X01** (`X01Settings` on the engine)
 
 - Starting score: 301 | 501 | 701
-- Double in / double out toggles
-- Bull scoring rules (25 vs 50) — decide early
+- Double in / double out toggles (defaults: Off / On)
+- Inner bull (50) is D25; outer bull (25) is a single. See [`RULES.md`](./RULES.md)
 
 ---
 
 ## Game Engines (`domain/cricket/`, `domain/x01/`)
 
-Pure functions or classes. No `HttpClient`, no components.
+Pure functions. No `HttpClient`, no components. Implement [`RULES.md`](./RULES.md) only.
 
-### Common interface (conceptual)
+### Common interface
 
-- `applyThrow(state, throw)` → new state + result/events
+Engines:
+
+- `throwDart(state, dart)` → new state + result/events
 - `endTurn(state)` → advance player
 - `undoLastThrow(state)` → revert last dart
-- `isFinished(state)` / `getWinner(state)`
+- `isFinished(state)` / `getWinner(state)` (X01); Cricket uses `status` / `winnerId` on state
 
-### Cricket rules to implement
+`GameSessionService.applyThrow(dart)` wraps `throwDart` for the active mode.
 
-1. Marks: S=1, D=2, T=3 on a target
+### Cricket (implemented)
+
+1. Marks: S=1, D=2, T=3 on a target (outer bull = 1, inner bull = 2)
 2. Close target at ≥3 marks
-3. Points on closed targets (define opponent-open rules)
-4. Win: all targets closed + point tie-break
+3. The closing dart does not score. Later darts score only while an opponent still has the target open
+4. Win: all targets closed + point tie-break; equal points after deadlock = draw
 
-### X01 rules to implement
+### X01 (implemented)
 
 1. Subtract dart value from remaining score
-2. **Bust:** below 0, land on 1 with double-out, invalid finish → revert turn
+2. **Bust:** below 0; remaining 1 when double-out is On; invalid checkout → revert turn
 3. **Double in:** first scoring throw must be double (if enabled)
 4. **Double out:** winning throw must be double (if enabled)
+5. When double-out is Off, checkout on 0 with any dart (including S1)
 
 ### Engine results
 
-Return structured results, not just state:
+Return structured results, not just state.
 
-- `success | bust | invalid | game_won`
-- Optional `events[]`: `target_closed`, `points_scored`, etc.
+**X01** `X01Result`: `success | bust | invalid | game_won`  
+**X01** `X01Event`: `turn_completed`, `bust`, `double_in`, `checkout`
+
+**Cricket** `CricketResult`: `success | invalid | game_won | draw`  
+**Cricket** `CricketEvent`: `turn_completed`, `target_closed`, `points_scored`
 
 UI shows messages from engine results — **do not duplicate rules in templates**.
 
@@ -160,19 +182,19 @@ UI shows messages from engine results — **do not duplicate rules in templates*
 
 ## State Management
 
-### MVP (current)
+### Current
 
 - `AddPlayersComponent`: child-owned player list UI
 - Emits to parent via `output()`
 - `HomeComponent`: holds `selectedGamemode`, `selectedX01Score`, `players`
 
-### Next step (before game navigation)
+**`GameSessionService`** in `state/` is the single source of truth for the live match:
 
-**`GameSessionService`** in `state/` — single source of truth:
-
-- `players`, `mode`, `x01Settings`, `gameState`
+- `players`, `mode`, `x01Settings` / `cricketSettings`, `x01GameState` / `cricketGameState`
 - Home writes on **Start**; game screens read
-- Use `signal()` / `computed()` (Angular 19)
+- Actions: `startGame`, `applyThrow`, `endTurn`, `undoLastThrow`, `reset`
+- `signal()` / `computed()` (Angular 19)
+- In memory only until Phase 5.2 (`localStorage` with a schema version)
 
 ### Future (backend)
 
@@ -186,11 +208,39 @@ core/api/     → HttpClient, DTO mapping, optional WebSocket
 | Feature | Backend needed? |
 |---------|-----------------|
 | Local pass-and-play | No |
-| localStorage history | No |
+| Capacitor phone wrap (Phase 6) | No |
+| localStorage live session (Phase 5.2) | No |
+| Simple match history (Phase 5.2b) | No |
 | Accounts, cross-device stats | Yes |
 | Online multiplayer | Yes (REST + WebSocket) |
 
 Domain engines stay client-side; API layer maps DTOs ↔ domain models.
+
+---
+
+## Mobile wrap (Capacitor)
+
+The Angular app is the product. Capacitor is a native shell around the same build. Domain engines and `GameSessionService` stay in the WebView. Do not move rules into native code.
+
+**Android first.** This repo is on Windows. iOS needs a Mac and waits until after the Android wrap works.
+
+### What Phase 5 must already do (wrap-ready)
+
+- Phone-width layout first. Do not design for a wide desktop and then shrink.
+- Tap targets about 44px. Do not use hover-only controls.
+- Pad the shell with `env(safe-area-inset-*)` for notch and status bar. Set `viewport-fit=cover` on the viewport meta.
+- Persist the live session (Phase 5.2). The OS can kill the WebView.
+- Confirm leave **inside the app** (`CanDeactivate` + a Leave control). Do not use `beforeunload` as the main guard — it does not run in Capacitor.
+- Keep `base href="/"` and PathLocationStrategy. Capacitor 6+ serves `https://localhost`.
+
+### What Phase 6 adds (the wrap)
+
+- `@capacitor/cli` + `@capacitor/core` + `@capacitor/android`
+- `webDir`: `dist/darts-project/browser` (Angular 19 application builder)
+- Build the web app, then `npx cap sync android`
+- Optional later: StatusBar, SplashScreen, hardware back button, iOS
+
+Do not add Capacitor plugins in Phase 5.
 
 ---
 
@@ -216,24 +266,28 @@ Domain engines stay client-side; API layer maps DTOs ↔ domain models.
 - Conditional x01 score select: `@if (selectedGamemode === 'x01')`
 - `<app-add-players (playersChange)="...">`
 - **Start game** button → validate → write session → navigate
+- Double in / double out toggles: Phase 5.1b (engine already accepts them)
 
 Requires `FormsModule` in standalone `imports` for `ngModel`.
+
+The component references `home.component.scss`, but that file is missing (Phase 5.1).
 
 ### Add Players (`shared/add-players/`)
 
 - Default 2 players; add up to 4; remove down to 1
 - Emit on every change; emit defaults in `ngOnInit` so parent has initial list
 - `maxPlayers = 4`
+- References `add-players.component.scss`, but that file is missing (Phase 5.1)
 
 ### Game screens
 
 - Read from `GameSessionService`
-- Shared widgets: dart input, turn summary, undo, end turn
+- Shared chrome: `game-shell` (dart input, turn summary, undo, end turn, winner banner)
 - Mode-specific scoreboard (Cricket grid vs X01 remaining scores)
 
 ---
 
-## Shared UI (to build)
+## Shared UI (built)
 
 | Component | Role |
 |-----------|------|
@@ -242,50 +296,32 @@ Requires `FormsModule` in standalone `imports` for `ngModel`.
 | `turn-summary` | Current turn's darts |
 | `game-actions` | Undo, end turn |
 | `game-shell` | Winner banner, message, dart pad, actions; scoreboard via content |
-| Scoreboard pieces | Mode-specific |
+| Scoreboard pieces | Mode-specific (on each game feature) |
 
 Input components emit `DartThrow`; engines validate.
 
+Game widgets have SCSS. Missing SCSS files (Phase 5.1): Home, add-players, app shell (`app.component.scss`).
+
 ---
 
-## Rules Decisions (lock before coding engines)
+## Rules
 
-Document chosen rules in code comments or a `RULES.md` when implementing.
-
-**Cricket**
-
-- [ ] Standard or cut-throat scoring?
-- [ ] Points only when opponent still open?
-- [ ] Bull mark split (single/double bull)?
-
-**X01**
-
-- [ ] Default starting score
-- [ ] Double in/out defaults
-- [ ] Bull = 25 or 50 for checkout?
-
-**Both**
-
-- [ ] Turn order (fixed rotation for v1)
-- [ ] Cricket tie handling
+Do not keep a second rule checklist here. Engines implement [`RULES.md`](./RULES.md). The UI never re-implements rules.
 
 ---
 
 ## Build Order
 
-1. Domain models
-2. X01 engine (simpler — proves turn flow)
-3. `GameSessionService` + minimal X01 game screen
-4. Home + routing + guard
-5. `add-players` component
-6. Cricket engine + Cricket screen
-7. Polish: undo, layout, optional localStorage
+Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4 are done. Next: Phase 5 (phone-first design, X01 toggles, persist, session UX), then Phase 6 (Capacitor Android wrap).
 
 ---
 
-## Deferred (post-MVP)
+## Deferred (after the Capacitor wrap)
 
-- Match history / statistics UI
+Phase 5.2b adds a simple match-history screen. Phase 6 wraps the app. These stay later:
+
+- iOS Capacitor project (needs a Mac)
+- Statistics UI over match history
 - Legs and sets
 - Online multiplayer
 - Custom Cricket targets
@@ -327,6 +363,8 @@ flowchart TB
     subgraph shared [Shared UI]
         AddPlayers[add-players]
         DartInput[dart-input]
+        TurnSummary[turn-summary]
+        GameActions[game-actions]
         GameShell[game-shell]
     end
 
@@ -347,6 +385,8 @@ flowchart TB
     CricketUI --> GameShell
     X01UI --> GameShell
     GameShell --> DartInput
+    GameShell --> TurnSummary
+    GameShell --> GameActions
     Session --> Models
     Session --> CricketEngine
     Session --> X01Engine
@@ -371,6 +411,9 @@ flowchart TB
 - [x] X01 engine unit tests (Phase 1.3)
 - [x] `GameSessionService` (Phase 2)
 - [x] Game route guard (Phase 2)
+- [x] Phase 3 shared widgets (`dart-input`, `turn-summary`, `game-actions`, `game-shell`)
 - [x] X01 game screen wired to session (Phase 3)
 - [x] Cricket engine (Phase 4)
 - [x] Cricket game screen wired to session (Phase 4)
+- [ ] Phase 5 — phone-first design, X01 toggles, persist, session UX
+- [ ] Phase 6 — Capacitor Android wrap

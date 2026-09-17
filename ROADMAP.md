@@ -2,18 +2,20 @@
 
 > Working plan for implementing features one session at a time.
 > Each numbered item is sized to fit in a single session. Start a new session per item,
-> read this file + `architecture.md`, implement, run tests, then check the item off here.
+> read this file + `architecture.md` + `RULES.md`, then check the item off here.
 
 ---
 
 ## Commit strategy
 
-- **Commits are made by the owner only — never automatic.** Agents prepare work, run
-  typecheck/tests, and leave changes uncommitted for the owner to review and commit.
+- **Commits are made by the owner only — never automatic.** Agents prepare work
+  and leave changes uncommitted for the owner to review and commit.
 - **One commit per roadmap item** (or per natural stopping point within a long item).
   Commit at the end of each session so the next session starts from a clean tree.
-- **Always commit green:** typecheck + tests pass before every commit. The domain tests
-  are the safety net — if they break, fix before committing.
+- **Always commit green:** the owner confirms typecheck + tests pass before every
+  commit. Agents do **not** run `ng test` or `test:ci`.
+- The owner runs tests in the browser (`ng test`) before commit. Do not run
+  headless tests.
 - **Implementation ships with its tests** in the same commit — the tests are the proof
   the engine works, so they belong with the code.
 - **Follow the repo's existing style** (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
@@ -26,7 +28,6 @@
   (e.g. the deleted `.tmp-spec-run/`).
 - **Docs checkboxes** (`ROADMAP.md`/`architecture.md` status) go in the same commit as
   the work they mark done, or in a tiny trailing `docs:` commit — not spread around.
-- Only user runs tests via `ng test` - do not run headless tests.
 
 ---
 
@@ -50,7 +51,12 @@
 | `dart-input` (1–20 with S/D/T, bull, miss)                 | ✅                                                                   |
 | `turn-summary` / `game-actions` widgets                    | ✅                                                                   |
 | X01 game screen (scoreboard, undo, bust, win banner)       | ✅                                                                   |
-| Styling                                                    | ◻️ game widgets styled; full design pass is Phase 5.1                |
+| Styling                                                    | ◻️ game widgets styled; Home / add-players / app shell SCSS missing; Phase 5.1 |
+| Home: X01 double in / double out                           | ◻️ Phase 5.1b (engine defaults already match RULES.md)               |
+| Persist live session                                       | ◻️ Phase 5.2                                                         |
+| Match history screen                                       | ◻️ Phase 5.2b                                                        |
+| Rematch / leave / resume                                   | ◻️ Phase 5.3                                                         |
+| Capacitor Android wrap                                     | ◻️ Phase 6                                                           |
 
 ---
 
@@ -126,23 +132,77 @@ Block `/game/*` when there is no valid session → redirect to `/`.
 
 ## Phase 5 — Polish & persistence
 
-**5.1 — Visual design pass** (all SCSS currently empty)
-Basic layout/typography, scoreboard legibility, touch-friendly dart input for pass-and-play on one device.
+- [ ] **5.1 — Visual design** (phone first, one device)
+  - Create the three missing SCSS files: `home.component.scss`,
+    `add-players.component.scss`, `app.component.scss`.
+  - Layout for a phone screen first (pass-and-play, then Capacitor).
+  - Home: mode, score, players, Start — readable layout.
+  - Game: scoreboard first; dart pad large enough to tap (about 44px).
+  - Pad the shell with `env(safe-area-inset-*)`. Set `viewport-fit=cover` on the
+    viewport meta in `src/index.html`. Do not use hover-only controls.
+  - Use the CSS variables already in `src/styles.scss`. Do not add a design system.
 
-**5.2 — localStorage session + match history**
-Persist the in-progress game (refresh-safe) and finished matches for a simple history screen.
+- [ ] **5.1b — X01 settings on Home**
+  Engine already has `doubleIn` / `doubleOut`. Home currently sends only
+  `startingScore`. Add two toggles. Defaults stay Off / On per `RULES.md`.
+  Do not add Cricket setting UI. Targets and standard scoring stay fixed.
+  Bust on remaining 1 applies only when double-out is On (`RULES.md` + engine).
 
-**5.3 — UX gaps**
-New game / rematch from the finished state, confirm-before-leave on a live game.
+- [ ] **5.2 — Persist live session only**
+  - `localStorage` for `ActiveSession` with a **schema version**.
+  - Restore on load so refresh on `/game/*` does not bounce to Home.
+  - Guard still redirects when there is no valid stored session.
+  - Required for Capacitor: the OS can kill the WebView. Stay on `localStorage`
+    (no Preferences plugin until the wrap proves it is needed).
+
+- [ ] **5.2b — Simple match history**
+  Store finished matches and add a history screen + route. Not statistics
+  (statistics stay Phase 7).
+
+- [ ] **5.3 — UX around the session**
+
+  | Gap | Current | Target |
+  |-----|---------|--------|
+  | New game | Banner button resets and goes Home | Keep that as **Leave to setup** |
+  | Rematch | Missing | Same players + settings, new engine state, stay on the game route |
+  | Leave while live | No in-app back | A Leave control + confirm |
+  | Confirm leave | No `CanDeactivate` / `beforeunload` | Confirm in-app when `status === 'in_progress'`. Do **not** rely on `beforeunload` (it does not run in Capacitor). Hardware back is Phase 6. |
+  | Home vs live session | Back to `/` keeps memory session | Home shows **Resume** and **New game** |
+  | Win message | Banner and `.message` both say who won | Banner only; keep bust / invalid in `.message` |
+
+  Optional later (not 5.3): show engine events (`target_closed`, `double_in`)
+  in the message line. `result-message.ts` only maps result `type`.
 
 ---
 
-## Phase 6 — Deferred (post-MVP, from `architecture.md`)
+## Phase 6 — Capacitor wrap (Android first)
 
+The same Angular build runs in a native WebView. Do not move rules into native code.
+
+- [ ] **6.1 — Add Capacitor**
+  `@capacitor/cli`, `@capacitor/core`, `@capacitor/android`.
+  Set `webDir` to `dist/darts-project/browser` (Angular 19 application builder).
+  Keep `base href="/"`.
+
+- [ ] **6.2 — Android project + sync**
+  `ng build`, then `npx cap sync android`. Open in Android Studio and run on a device
+  or emulator. Confirm Home → Start → live game → persist across app restart.
+
+- [ ] **6.3 — Native chrome (optional, same phase if small)**
+  StatusBar / SplashScreen. Hardware back: confirm-leave on a live game, else
+  navigate Home. No extra plugins.
+
+iOS waits until Android works (needs a Mac).
+
+---
+
+## Phase 7 — Deferred (post-wrap, from `architecture.md`)
+
+- iOS Capacitor project
 - Legs and sets
 - Checkout suggestions (UI helper)
 - Custom Cricket targets
-- Statistics UI over match history
+- Statistics UI over match history (simple history is Phase 5.2b)
 - Online multiplayer / accounts (needs backend: REST + WebSocket)
 - NgRx — only if signal/service complexity demands it
 
@@ -162,5 +222,9 @@ Run items in this sequence — each builds on the previous:
 8. 3.2 + 3.3 → X01 screen loop ✅
 9. 4.1 + 4.2 → Cricket ✅
 10. 5.1 → design pass
-11. 5.2 → persistence/history
-12. 5.3 → UX gaps
+11. 5.1b → Home double in/out
+12. 5.2 → persist live session
+13. 5.2b → match history
+14. 5.3 → rematch / leave / resume
+15. 6.1 + 6.2 → Capacitor Android wrap
+16. 6.3 → StatusBar / hardware back (optional)

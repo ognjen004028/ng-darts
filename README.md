@@ -2,7 +2,11 @@
 
 Pass-and-play darts scorer. The app runs in the browser. Players can play **X01** (301 / 501 / 701) or **Cricket** on one device.
 
-Game rules live in pure TypeScript engines. The UI does not re-implement the rules.
+The end goal is a phone app: the same Angular UI, wrapped with **Capacitor** (Android first).
+
+Game rules live in [RULES.md](./RULES.md) and in pure TypeScript engines. The UI does not re-implement the rules.
+
+Session state is in memory. A page refresh ends the game (until Phase 5.2).
 
 ## Start the app
 
