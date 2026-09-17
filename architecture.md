@@ -144,19 +144,21 @@ Pure functions. No `HttpClient`, no components. Implement [`RULES.md`](./RULES.m
 
 Engines:
 
-- `throwDart(state, dart)` → new state + result/events
-- `endTurn(state)` → advance player
-- `undoLastThrow(state)` → revert last dart
+- `throwDart(state, dart)` → new state + result/events (Cricket also takes `playerId`)
+- `endTurn(state)` → advance player (X01 only; Cricket has no turns)
+- `undoLastThrow(state)` → revert last dart / last zone tap
 - `isFinished(state)` / `getWinner(state)` (X01); Cricket uses `status` / `winnerId` on state
 
-`GameSessionService.applyThrow(dart)` wraps `throwDart` for the active mode.
+`GameSessionService.applyThrow(dart, playerId?)` wraps `throwDart` for the active mode. Cricket needs `playerId`.
 
 ### Cricket (implemented)
 
-1. Marks: S=1, D=2, T=3 on a target (outer bull = 1, inner bull = 2)
-2. Close target at ≥3 marks
-3. The closing dart does not score. Later darts score only while an opponent still has the target open
-4. Win: all targets closed + point tie-break; equal points after deadlock = draw
+1. No turns. A zone tap is one single dart for that player
+2. Marks: S=1, D=2, T=3 on a target (outer bull = 1, inner bull = 2). The board sends singles
+3. Close target at ≥3 marks
+4. The closing dart does not score. Later darts score only while an opponent still has the target open
+5. Win: all targets closed + point tie-break; equal points after deadlock = draw
+6. Undo reverts the last tap
 
 ### X01 (implemented)
 
@@ -270,19 +272,20 @@ Do not add Capacitor plugins in Phase 5.
 
 Requires `FormsModule` in standalone `imports` for `ngModel`.
 
-The component references `home.component.scss`, but that file is missing (Phase 5.1).
+Home layout is in `home.component.scss` (phone-first stack).
 
 ### Add Players (`shared/add-players/`)
 
 - Default 2 players; add up to 4; remove down to 1
 - Emit on every change; emit defaults in `ngOnInit` so parent has initial list
 - `maxPlayers = 4`
-- References `add-players.component.scss`, but that file is missing (Phase 5.1)
+- Layout is in `add-players.component.scss` (name row + add row)
 
 ### Game screens
 
 - Read from `GameSessionService`
-- Shared chrome: `game-shell` (dart input, turn summary, undo, end turn, winner banner)
+- X01: `game-shell` (dart input, turn summary, undo, end turn, winner banner)
+- Cricket: mark-zone scoreboard + Undo (no keypad, no turns)
 - Mode-specific scoreboard (Cricket grid vs X01 remaining scores)
 
 ---
@@ -300,7 +303,7 @@ The component references `home.component.scss`, but that file is missing (Phase 
 
 Input components emit `DartThrow`; engines validate.
 
-Game widgets have SCSS. Missing SCSS files (Phase 5.1): Home, add-players, app shell (`app.component.scss`).
+Game widgets have SCSS. Home, add-players, and the app shell (`app.component.scss`) also have SCSS. Phone-first layout and ~44px tap targets are in place (Phase 5.1).
 
 ---
 
@@ -312,7 +315,7 @@ Do not keep a second rule checklist here. Engines implement [`RULES.md`](./RULES
 
 ## Build Order
 
-Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4 are done. Next: Phase 5 (phone-first design, X01 toggles, persist, session UX), then Phase 6 (Capacitor Android wrap).
+Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4 and 5.1 are done. Next: 5.1b (Home double in / double out), then persist, session UX, then Phase 6 (Capacitor Android wrap).
 
 ---
 

@@ -51,7 +51,7 @@
 | `dart-input` (1–20 with S/D/T, bull, miss)                 | ✅                                                                   |
 | `turn-summary` / `game-actions` widgets                    | ✅                                                                   |
 | X01 game screen (scoreboard, undo, bust, win banner)       | ✅                                                                   |
-| Styling                                                    | ◻️ game widgets styled; Home / add-players / app shell SCSS missing; Phase 5.1 |
+| Styling                                                    | ✅ phone-first; Home / add-players / app shell SCSS; ~44px tap targets |
 | Home: X01 double in / double out                           | ◻️ Phase 5.1b (engine defaults already match RULES.md)               |
 | Persist live session                                       | ◻️ Phase 5.2                                                         |
 | Match history screen                                       | ◻️ Phase 5.2b                                                        |
@@ -124,7 +124,7 @@ Block `/game/*` when there is no valid session → redirect to `/`.
   Per `RULES.md`: marks (S/D/T → 1/2/3), close at ≥3, points on closed targets per chosen variant, win = all targets closed + tie-break.
 
 - [x] **4.2 — Cricket game screen** (`src/app/features/cricket-game/`)
-  Scoreboard grid (15–20 + bull × players) with marks and points, same turn-flow widgets as X01.
+  Scoreboard grid (15–20 + bull × players) with mark zones and Undo. No keypad, no turns.
 
 **Acceptance:** full Cricket game playable; engine tests green. (Engine tests cover marks, scoring, win/deadlock/draw, undo; UX check in the browser.)
 
@@ -132,7 +132,7 @@ Block `/game/*` when there is no valid session → redirect to `/`.
 
 ## Phase 5 — Polish & persistence
 
-- [ ] **5.1 — Visual design** (phone first, one device)
+- [x] **5.1 — Visual design** (phone first, one device)
   - Create the three missing SCSS files: `home.component.scss`,
     `add-players.component.scss`, `app.component.scss`.
   - Layout for a phone screen first (pass-and-play, then Capacitor).
@@ -221,7 +221,7 @@ Run items in this sequence — each builds on the previous:
 7. 3.1 → `dart-input` ✅
 8. 3.2 + 3.3 → X01 screen loop ✅
 9. 4.1 + 4.2 → Cricket ✅
-10. 5.1 → design pass
+10. 5.1 → design pass ✅
 11. 5.1b → Home double in/out
 12. 5.2 → persist live session
 13. 5.2b → match history
