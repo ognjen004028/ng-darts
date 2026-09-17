@@ -7,16 +7,9 @@
 
 ## Shared rules (both modes)
 
-### Players & turn order
+### Players
 - 1–4 players, pass-and-play on one device.
-- Turn order is **fixed rotation** by player order (as added in setup), starting with the first player.
-- Each turn consists of up to **3 darts**. The turn automatically ends after the 3rd dart
-  (or immediately on a checkout / bust / game end).
-- A player may end a turn after 1 dart or 2 darts. End turn is not valid when the turn
-  has 0 darts.
-- **No turn limit** — the game lasts as many rounds as it takes (no 15-round cap like some
-  machines enforce). A bust or missed turn never advances a global round counter.
-- **Undo** reverts the last thrown dart, including a full busted turn.
+- **Undo** reverts the last action (the last dart in X01; the last zone tap in Cricket).
 
 ### Dart values
 | Throw | Value |
@@ -34,6 +27,15 @@
 ---
 
 ## X01
+
+### Turns
+- Turn order is **fixed rotation** by player order (as added in setup), starting with the first player.
+- Each turn consists of up to **3 darts**. The turn automatically ends after the 3rd dart
+  (or immediately on a checkout / bust / game end).
+- A player may end a turn after 1 dart or 2 darts. End turn is not valid when the turn
+  has 0 darts.
+- **No turn limit** — the game lasts as many rounds as it takes (no 15-round cap like some
+  machines enforce). A bust or missed turn never advances a global round counter.
 
 ### Settings
 | Setting | Default | Options |
@@ -72,6 +74,13 @@ When double out is **Off**:
 ---
 
 ## Cricket
+
+### Play
+- There are **no turns** and no dart keypad.
+- A tap on a player's target zone adds **one single** dart for that player on that target.
+- Any player's zones may be tapped while the game is in progress.
+- A tap on a **closed** zone scores points when the standard scoring rules below allow it.
+- **Undo** reverts the last tap.
 
 ### Settings
 | Setting | Default |
@@ -117,5 +126,6 @@ When double out is **Off**:
 | Cricket scoring variant | Standard (not cut-throat) |
 | Cricket points only when opponent open | Yes |
 | Cricket bull mark split | Yes (outer = 1, inner = 2) |
-| Turn order | Fixed rotation, first player starts |
+| X01 turn order | Fixed rotation, first player starts |
+| Cricket play | No turns; zone tap = one single dart; undo last tap |
 | Cricket tie handling | Most points wins; equal points = draw |

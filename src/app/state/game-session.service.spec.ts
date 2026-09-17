@@ -155,28 +155,32 @@ describe('GameSessionService', () => {
     it('applies a dart and updates marks', () => {
       service.startGame('cricket', players);
 
-      const result = service.applyThrow({ kind: 'single', target: 20 });
+      const result = service.applyThrow({ kind: 'single', target: 20 }, 'p1');
 
       expect(result?.type).toBe('success');
       expect(service.cricketGameState()?.players['p1'].marks['20']).toBe(1);
       expect(service.status()).toBe('in_progress');
     });
 
+    it('requires a player id for a cricket throw', () => {
+      service.startGame('cricket', players);
+
+      expect(service.applyThrow({ kind: 'single', target: 20 })?.type).toBe('invalid');
+    });
+
     it('syncs session status and winner when cricket is won', () => {
       service.startGame('cricket', players);
-      applyDarts(service, cricketCloseAll);
+      applyDarts(service, cricketCloseAll, 'p1');
 
       expect(service.status()).toBe('finished');
       expect(service.winnerId()).toBe('p1');
     });
 
-    it('ends a cricket turn and passes play', () => {
+    it('rejects endTurn because Cricket has no turns', () => {
       service.startGame('cricket', players);
-      service.applyThrow({ kind: 'single', target: 20 });
+      service.applyThrow({ kind: 'single', target: 20 }, 'p1');
 
-      expect(service.endTurn()?.type).toBe('success');
-      expect(service.cricketGameState()?.currentPlayerIndex).toBe(1);
-      expect(service.cricketGameState()?.currentTurn).toBeNull();
+      expect(service.endTurn()?.type).toBe('invalid');
     });
   });
 });

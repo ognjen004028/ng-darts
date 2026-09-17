@@ -37,7 +37,7 @@ describe('CricketGameComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('No active session.');
   });
 
-  it('renders the targets-by-players scoreboard with 0 marks and points', () => {
+  it('renders the targets-by-players scoreboard with zones and Undo only', () => {
     session.startGame('cricket', players);
     fixture.detectChanges();
 
@@ -50,57 +50,69 @@ describe('CricketGameComponent', () => {
     }
     expect(text).toContain('Bull');
     expect(text).toContain('Points');
-    expect(component.currentPlayerName()).toBe('Ada');
+    expect(text).toContain('Undo');
+    expect(text).not.toContain('End turn');
+    expect(text).not.toContain('Up next');
+    expect(native.querySelector('app-dart-input')).toBeNull();
+    expect(native.querySelector('app-turn-summary')).toBeNull();
+    expect(native.querySelectorAll('button.mark-hit').length).toBe(14);
   });
 
-  it('updates marks when a dart is thrown', () => {
+  it('updates a mark when that player zone is tapped', () => {
     session.startGame('cricket', players);
     fixture.detectChanges();
 
-    component.onDart({ kind: 'single', target: 20 });
-    component.onDart({ kind: 'triple', target: 19 });
-
+    clickZone(fixture, '20, Ada, no marks');
     fixture.detectChanges();
-    const native = fixture.nativeElement as HTMLElement;
-    expect(cellText(native, '20', 0)).toBe('1');
-    expect(cellText(native, '19', 0)).toBe('3');
+
+    expect(markClass(fixture.nativeElement as HTMLElement, '20', 0)).toContain('mark-1');
   });
 
-  it('marks a closed target and passes play after 3 darts', () => {
+  it('lets either player tap without a turn change', () => {
     session.startGame('cricket', players);
     fixture.detectChanges();
 
-    component.onDart({ kind: 'triple', target: 20 });
-
+    clickZone(fixture, '20, Ada, no marks');
+    clickZone(fixture, '20, Grace, no marks');
     fixture.detectChanges();
-    const native = fixture.nativeElement as HTMLElement;
-    const closedCell = cell(native, '20', 0);
-    expect(closedCell?.classList.contains('closed')).toBeTrue();
 
-    component.onDart({ kind: 'single', target: 19 });
-    component.onDart({ kind: 'single', target: 18 });
-    expect(component.currentPlayerName()).toBe('Grace');
+    const native = fixture.nativeElement as HTMLElement;
+    expect(markClass(native, '20', 0)).toContain('mark-1');
+    expect(markClass(native, '20', 1)).toContain('mark-1');
+  });
+
+  it('marks a closed target after three singles', () => {
+    session.startGame('cricket', players);
+    fixture.detectChanges();
+
+    clickZone(fixture, '20, Ada, no marks');
+    clickZone(fixture, '20, Ada, 1 mark');
+    clickZone(fixture, '20, Ada, 2 marks');
+    fixture.detectChanges();
+
+    const native = fixture.nativeElement as HTMLElement;
+    expect(cell(native, '20', 0)?.classList.contains('closed')).toBeTrue();
+    expect(markClass(native, '20', 0)).toContain('mark-closed');
   });
 
   it('finishes when all targets are closed', () => {
     session.startGame('cricket', players);
-    fixture.detectChanges();
-    throwAll((dart) => component.onDart(dart), cricketCloseAll);
+    throwAll((dart) => session.applyThrow(dart, 'p1'), cricketCloseAll);
 
     fixture.detectChanges();
     expect(session.status()).toBe('finished');
     expect(session.winnerId()).toBe('p1');
   });
 
-  it('undoes a thrown dart and restores marks', () => {
+  it('undoes the last tap and restores marks', () => {
     session.startGame('cricket', players);
     fixture.detectChanges();
 
-    component.onDart({ kind: 'single', target: 20 });
+    clickZone(fixture, '20, Ada, no marks');
     component.onUndo();
-
     fixture.detectChanges();
-    expect(cellText(fixture.nativeElement as HTMLElement, '20', 0)).toBe('0');
+
+    expect(markClass(fixture.nativeElement as HTMLElement, '20', 0)).toContain('mark-0');
   });
 
   it('new game resets the session and returns home', () => {
@@ -113,8 +125,16 @@ describe('CricketGameComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/']);
   });
 
-  function cellText(native: HTMLElement, target: string, index: number): string {
-    return cell(native, target, index)?.textContent?.trim() ?? '';
+  function clickZone(current: ComponentFixture<CricketGameComponent>, label: string): void {
+    const button = (current.nativeElement as HTMLElement).querySelector(
+      `button[aria-label="${label}"]`,
+    ) as HTMLButtonElement | null;
+    button?.click();
+    current.detectChanges();
+  }
+
+  function markClass(native: HTMLElement, target: string, index: number): string {
+    return cell(native, target, index)?.querySelector('.mark')?.className ?? '';
   }
 
   function cell(native: HTMLElement, target: string, index: number): HTMLTableCellElement | null {

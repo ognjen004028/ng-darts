@@ -114,11 +114,18 @@ export class GameSessionService {
   // UI never re-implements rules (architecture.md); it just calls these.
   // ---------------------------------------------------------------------------
 
-  /** Apply a dart in the active game. Returns the engine result, or null when no game is active. */
-  applyThrow(dart: DartThrow): GameActionResult | null {
+  /** Apply a dart in the active game. Returns the engine result, or null when no game is active.
+   *  Cricket requires `playerId` (the player whose zone was tapped). X01 ignores it.
+   */
+  applyThrow(dart: DartThrow, playerId?: string): GameActionResult | null {
     return this.runEngine(
       (state) => engineThrowDart(state, dart),
-      (state) => cricketThrowDart(state, dart),
+      (state) => {
+        if (!playerId) {
+          return { state, result: { type: 'invalid', reason: 'Player required' } };
+        }
+        return cricketThrowDart(state, dart, playerId);
+      },
     );
   }
 

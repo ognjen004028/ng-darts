@@ -6,7 +6,7 @@
  * result; the UI never re-implements rules.
  */
 import { DartThrow, NumberSegment, dartValue } from '../models/dart-throw';
-import { DARTS_PER_TURN, Turn } from '../models/turn';
+import { Turn } from '../models/turn';
 import { Player } from '../models/player';
 
 export type CricketTarget = NumberSegment | 'bull';
@@ -27,7 +27,7 @@ export interface CricketPlayerState {
   points: number;
 }
 
-/** A single Cricket turn, extended with the state at its start (for undo). */
+/** One zone tap, with the player's state at its start (for undo). */
 export interface CricketTurn extends Turn {
   startMarks: Record<string, number>;
   startPoints: number;
@@ -35,13 +35,12 @@ export interface CricketTurn extends Turn {
 
 export interface CricketGameState {
   settings: CricketSettings;
-  /** Player ids in turn order (fixed rotation). */
   playerIds: string[];
   players: Record<string, CricketPlayerState>;
   currentPlayerIndex: number;
-  /** The in-progress turn, or null between turns. */
+  /** Unused in play (Cricket has no turns); kept so undo can restore a snapshot. */
   currentTurn: CricketTurn | null;
-  /** Completed turns (scored or game-ending) — supports undo. */
+  /** Completed taps (and the winning/drawing tap) — supports undo. */
   history: CricketTurn[];
   status: 'in_progress' | 'finished';
   /** Null when finished by deadlock-draw (RULES.md). */
@@ -130,103 +129,54 @@ export function dartMarks(dart: DartThrow): number {
 // Actions
 // ---------------------------------------------------------------------------
 
-export function throwDart(state: CricketGameState, dart: DartThrow): CricketOutcome {
+export function throwDart(
+  state: CricketGameState,
+  dart: DartThrow,
+  playerId: string,
+): CricketOutcome {
   if (state.status === 'finished') {
     return { state, result: { type: 'invalid', reason: 'Game already finished' } };
   }
+  if (!state.playerIds.includes(playerId)) {
+    return { state, result: { type: 'invalid', reason: 'Unknown player' } };
+  }
 
-  const playerId = currentPlayerId(state);
-  const turn: CricketTurn = state.currentTurn ?? {
+  const live = state.players[playerId];
+  const action: CricketTurn = {
     playerId,
-    throws: [],
-    startMarks: { ...state.players[playerId].marks },
-    startPoints: state.players[playerId].points,
+    throws: [dart],
+    startMarks: { ...live.marks },
+    startPoints: live.points,
   };
-
-  if (turn.throws.length >= DARTS_PER_TURN) {
-    return {
-      state,
-      result: { type: 'invalid', reason: `Turn already has ${DARTS_PER_TURN} darts` },
-    };
-  }
-
-  const throws = [...turn.throws, dart];
-
-  // Recompute the player's live marks/points from the turn's start snapshot
-  // (opponents' marks are unchanged during this player's turn).
   const playerState: CricketPlayerState = {
-    marks: { ...turn.startMarks },
-    points: turn.startPoints,
+    marks: { ...live.marks },
+    points: live.points,
   };
-  const events: CricketEvent[] = [];
-  for (const thrown of throws) {
-    events.push(...applyDart(playerState, state, playerId, thrown));
-  }
+  const events = applyDart(playerState, state, playerId, dart);
 
   const next: CricketGameState = {
     ...state,
     players: { ...state.players, [playerId]: playerState },
-    currentTurn: { ...turn, throws },
+    currentTurn: action,
   };
 
-  // Win / deadlock / draw resolution (RULES.md → Cricket).
   const finished = resolveFinish(next, playerId);
   if (finished) return finished;
 
-  // The turn automatically ends after the last dart (RULES.md).
-  if (throws.length === DARTS_PER_TURN) {
-    return completeTurn(next, events);
-  }
-  return { state: next, result: { type: 'success', events } };
+  return commitAction(next, events);
 }
 
 export function endTurn(state: CricketGameState): CricketOutcome {
-  if (state.status === 'finished') {
-    return { state, result: { type: 'invalid', reason: 'Game already finished' } };
-  }
-  const turn = state.currentTurn;
-  if (!turn || turn.throws.length === 0) {
-    return { state, result: { type: 'invalid', reason: 'No darts thrown in the current turn' } };
-  }
-
-  return completeTurn(state, []);
+  return { state, result: { type: 'invalid', reason: 'Cricket has no turns' } };
 }
 
 export function undoLastThrow(state: CricketGameState): CricketOutcome {
-  // Case 1: rewind a finished game (win or draw) to the last turn.
-  if (state.status === 'finished') {
-    if (state.history.length === 0) {
-      return { state, result: { type: 'invalid', reason: 'Nothing to undo' } };
-    }
-    return restoreLastTurn({ ...state, status: 'in_progress', winnerId: null });
-  }
-
-  // Case 2: mid-turn — drop the last dart and recompute the player's state.
-  const turn = state.currentTurn;
-  if (turn && turn.throws.length > 0) {
-    const throws = turn.throws.slice(0, -1);
-    const playerState: CricketPlayerState = {
-      marks: { ...turn.startMarks },
-      points: turn.startPoints,
-    };
-    for (const thrown of throws) {
-      applyDart(playerState, state, turn.playerId, thrown);
-    }
-    return {
-      state: {
-        ...state,
-        players: { ...state.players, [turn.playerId]: playerState },
-        currentTurn: throws.length === 0 ? null : { ...turn, throws },
-      },
-      result: { type: 'success', events: [] },
-    };
-  }
-
-  // Case 3: between turns — restore the last completed turn.
   if (state.history.length === 0) {
     return { state, result: { type: 'invalid', reason: 'Nothing to undo' } };
   }
-  return restoreLastTurn(state);
+  const base =
+    state.status === 'finished' ? { ...state, status: 'in_progress' as const, winnerId: null } : state;
+  return restoreLastAction(base);
 }
 
 // ---------------------------------------------------------------------------
@@ -333,24 +283,20 @@ function finishGame(state: CricketGameState, result: CricketResult): CricketOutc
   return { state: next, result };
 }
 
-function completeTurn(state: CricketGameState, events: CricketEvent[]): CricketOutcome {
-  const turn = state.currentTurn;
-  if (!turn) {
-    return { state, result: { type: 'invalid', reason: 'No current turn' } };
+function commitAction(state: CricketGameState, events: CricketEvent[]): CricketOutcome {
+  const action = state.currentTurn;
+  if (!action) {
+    return { state, result: { type: 'invalid', reason: 'No current action' } };
   }
   const next: CricketGameState = {
     ...state,
-    history: [...state.history, turn],
+    history: [...state.history, action],
     currentTurn: null,
-    currentPlayerIndex: (state.currentPlayerIndex + 1) % state.playerIds.length,
   };
-  return {
-    state: next,
-    result: { type: 'success', events: [...events, { type: 'turn_completed' }] },
-  };
+  return { state: next, result: { type: 'success', events } };
 }
 
-function restoreLastTurn(state: CricketGameState): CricketOutcome {
+function restoreLastAction(state: CricketGameState): CricketOutcome {
   const last = state.history[state.history.length - 1];
   const next: CricketGameState = {
     ...state,
@@ -362,8 +308,7 @@ function restoreLastTurn(state: CricketGameState): CricketOutcome {
         points: last.startPoints,
       },
     },
-    currentPlayerIndex: state.playerIds.indexOf(last.playerId),
-    currentTurn: { ...last },
+    currentTurn: null,
   };
   return { state: next, result: { type: 'success', events: [] } };
 }

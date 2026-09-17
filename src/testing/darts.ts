@@ -35,20 +35,14 @@ export const x01BustFrom301: DartThrow[] = [
   t(10),
 ];
 
-/** Close 15–20 with triples, skip player 2, then close bull (D25 + 25). */
+/** Close 15–20 with triples, then close bull (D25 + 25). Cricket has no turns. */
 export const cricketCloseAll: DartThrow[] = [
   t(20),
   t(19),
   t(18),
-  miss(),
-  miss(),
-  miss(),
   t(17),
   t(16),
   t(15),
-  miss(),
-  miss(),
-  miss(),
   doubleBull(),
   singleBull(),
 ];
