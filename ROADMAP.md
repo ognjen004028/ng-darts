@@ -53,7 +53,7 @@
 | X01 game screen (scoreboard, undo, bust, win banner)       | ✅                                                                   |
 | Styling                                                    | ✅ phone-first; Home / add-players / app shell SCSS; ~44px tap targets |
 | Home: X01 double in / double out                           | ✅ Off / On selects; defaults Off / On per RULES.md                  |
-| Persist live session                                       | ◻️ Phase 5.2                                                         |
+| Persist live session                                       | ✅ localStorage + schema version; refresh keeps `/game/*`            |
 | Match history screen                                       | ◻️ Phase 5.2b                                                        |
 | Rematch / leave / resume                                   | ◻️ Phase 5.3                                                         |
 | Capacitor Android wrap                                     | ◻️ Phase 6                                                           |
@@ -148,7 +148,7 @@ Block `/game/*` when there is no valid session → redirect to `/`.
   Do not add Cricket setting UI. Targets and standard scoring stay fixed.
   Bust on remaining 1 applies only when double-out is On (`RULES.md` + engine).
 
-- [ ] **5.2 — Persist live session only**
+- [x] **5.2 — Persist live session only**
   - `localStorage` for `ActiveSession` with a **schema version**.
   - Restore on load so refresh on `/game/*` does not bounce to Home.
   - Guard still redirects when there is no valid stored session.
@@ -223,7 +223,7 @@ Run items in this sequence — each builds on the previous:
 9. 4.1 + 4.2 → Cricket ✅
 10. 5.1 → design pass ✅
 11. 5.1b → Home double in/out ✅
-12. 5.2 → persist live session
+12. 5.2 → persist live session ✅
 13. 5.2b → match history
 14. 5.3 → rematch / leave / resume
 15. 6.1 + 6.2 → Capacitor Android wrap

@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { Player } from '../domain/models/player';
 import { GameSessionService } from './game-session.service';
+import { SESSION_STORAGE_KEY } from './session-persist';
 import { cricketCloseAll, x01BustFrom301, x01CheckoutFrom301 } from '../../testing/darts';
-import { applyDarts } from '../../testing/session';
+import { applyDarts, clearPersistedSession } from '../../testing/session';
 
 describe('GameSessionService', () => {
   let service: GameSessionService;
@@ -13,6 +14,7 @@ describe('GameSessionService', () => {
   ];
 
   beforeEach(() => {
+    clearPersistedSession();
     TestBed.configureTestingModule({});
     service = TestBed.inject(GameSessionService);
   });
@@ -181,6 +183,43 @@ describe('GameSessionService', () => {
       service.applyThrow({ kind: 'single', target: 20 }, 'p1');
 
       expect(service.endTurn()?.type).toBe('invalid');
+    });
+  });
+
+  describe('persistence (Phase 5.2)', () => {
+    it('writes the live session and restores it on a new service', () => {
+      service.startGame('x01', players, { startingScore: 301 });
+      service.applyThrow({ kind: 'triple', target: 20 });
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({});
+      const restored = TestBed.inject(GameSessionService);
+
+      expect(restored.hasSession()).toBe(true);
+      expect(restored.mode()).toBe('x01');
+      expect(restored.x01GameState()?.scores['p1']).toBe(241);
+    });
+
+    it('clears storage on reset so a new service has no session', () => {
+      service.startGame('x01', players);
+      service.reset();
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({});
+      const restored = TestBed.inject(GameSessionService);
+
+      expect(restored.hasSession()).toBe(false);
+    });
+
+    it('drops an invalid stored payload and starts empty', () => {
+      localStorage.setItem(SESSION_STORAGE_KEY, '{not json');
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({});
+      const restored = TestBed.inject(GameSessionService);
+
+      expect(restored.hasSession()).toBe(false);
+      expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
     });
   });
 });

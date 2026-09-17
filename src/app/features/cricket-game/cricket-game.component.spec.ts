@@ -4,6 +4,7 @@ import { Player } from '../../domain/models/player';
 import { GameSessionService } from '../../state/game-session.service';
 import { CricketGameComponent } from './cricket-game.component';
 import { cricketCloseAll, throwAll } from '../../../testing/darts';
+import { clearPersistedSession } from '../../../testing/session';
 
 describe('CricketGameComponent', () => {
   let component: CricketGameComponent;
@@ -17,6 +18,7 @@ describe('CricketGameComponent', () => {
   ];
 
   beforeEach(async () => {
+    clearPersistedSession();
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     await TestBed.configureTestingModule({
       imports: [CricketGameComponent],

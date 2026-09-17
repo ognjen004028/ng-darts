@@ -4,10 +4,10 @@ import { GameMode } from '../../domain/models/game';
 import { GameSessionService } from '../../state/game-session.service';
 
 /**
- * Blocks `/game/*` routes when there is no active session (ROADMAP 2.3),
- * e.g. after a refresh — session state lives in memory until Phase 5
- * persistence. Also requires the session mode to match the route.
- * Redirects to Home.
+ * Blocks `/game/*` routes when there is no active session (ROADMAP 2.3).
+ * The session is restored from localStorage on service construct (Phase 5.2),
+ * so a refresh keeps a valid stored match. Redirects to Home when there is
+ * no valid session, or when the session mode does not match the route.
  */
 export const gameSessionGuard: CanActivateFn = (route) => {
   const router = inject(Router);

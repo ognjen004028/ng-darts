@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Player } from '../../domain/models/player';
 import { GameSessionService } from '../../state/game-session.service';
 import { HomeComponent } from './home.component';
+import { clearPersistedSession } from '../../../testing/session';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -13,6 +14,7 @@ describe('HomeComponent', () => {
   const players: Player[] = [{ id: 'p1', name: 'Ada' }];
 
   beforeEach(async () => {
+    clearPersistedSession();
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     await TestBed.configureTestingModule({
       imports: [HomeComponent],

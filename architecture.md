@@ -40,7 +40,8 @@ src/app/
 │   ├── cricket-game/
 │   └── x01-game/
 ├── state/                   # Client session state
-│   └── game-session.service.ts
+│   ├── game-session.service.ts
+│   └── session-persist.ts   # localStorage + schema version
 ├── app.routes.ts
 ├── app.config.ts
 └── app.component.ts         # Shell: <router-outlet /> only
@@ -91,7 +92,9 @@ Implemented in `core/guards/game-session.guard.ts`:
 - Block a game route when the session mode does not match the route
 - Redirect to `/`
 
-The session lives in memory. A page refresh clears it, so `/game/*` redirects to Home until Phase 5.2 persistence.
+The session is stored in `localStorage` with a schema version. A page refresh
+on `/game/*` stays on the game when the stored session is valid. The guard
+still redirects to Home when there is no valid stored session.
 
 ### Root shell
 
@@ -196,7 +199,7 @@ UI shows messages from engine results — **do not duplicate rules in templates*
 - Home writes on **Start**; game screens read
 - Actions: `startGame`, `applyThrow`, `endTurn`, `undoLastThrow`, `reset`
 - `signal()` / `computed()` (Angular 19)
-- In memory only until Phase 5.2 (`localStorage` with a schema version)
+- Persist the live `ActiveSession` in `localStorage` with a schema version (Phase 5.2)
 
 ### Future (backend)
 
@@ -315,7 +318,7 @@ Do not keep a second rule checklist here. Engines implement [`RULES.md`](./RULES
 
 ## Build Order
 
-Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4, 5.1, and 5.1b are done. Next: persist (5.2), session UX, then Phase 6 (Capacitor Android wrap).
+Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4, 5.1, 5.1b, and 5.2 are done. Next: match history (5.2b), session UX (5.3), then Phase 6 (Capacitor Android wrap).
 
 ---
 
@@ -419,5 +422,6 @@ flowchart TB
 - [x] Cricket engine (Phase 4)
 - [x] Cricket game screen wired to session (Phase 4)
 - [x] Phase 5.1 / 5.1b — phone-first design, Home X01 double in/out
-- [ ] Phase 5.2+ — persist, session UX
+- [x] Phase 5.2 — persist live session
+- [ ] Phase 5.2b / 5.3 — match history, session UX
 - [ ] Phase 6 — Capacitor Android wrap

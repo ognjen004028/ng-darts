@@ -6,6 +6,7 @@ import {
   provideRouter,
 } from '@angular/router';
 import { GameSessionService } from '../../state/game-session.service';
+import { clearPersistedSession } from '../../../testing/session';
 import { gameSessionGuard } from './game-session.guard';
 
 describe('gameSessionGuard', () => {
@@ -19,6 +20,7 @@ describe('gameSessionGuard', () => {
     TestBed.runInInjectionContext(() => gameSessionGuard(route, state));
 
   beforeEach(() => {
+    clearPersistedSession();
     TestBed.configureTestingModule({
       providers: [provideRouter([])],
     });
@@ -47,5 +49,17 @@ describe('gameSessionGuard', () => {
     session.startGame('cricket', [{ id: 'p1', name: 'Ada' }]);
 
     expect(runGuard()).toEqual(router.createUrlTree(['/']));
+  });
+
+  it('allows navigation after restoring a persisted session', () => {
+    session.startGame('x01', [{ id: 'p1', name: 'Ada' }]);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([])],
+    });
+    router = TestBed.inject(Router);
+
+    expect(runGuard()).toBe(true);
   });
 });

@@ -20,6 +20,7 @@ import {
   throwDart as cricketThrowDart,
   undoLastThrow as cricketUndoLastThrow,
 } from '../domain/cricket/cricket-engine';
+import { loadActiveSession, saveActiveSession } from './session-persist';
 
 /** Union of engine results returned by the mode-dispatched game actions. */
 export type GameActionResult = X01Outcome['result'] | CricketOutcome['result'];
@@ -48,10 +49,11 @@ export type ActiveSession =
 /**
  * Single source of truth for the in-progress match (ROADMAP 2.1).
  * Home writes on Start; game screens read. Signals throughout.
+ * Restores from localStorage so a refresh (or WebView kill) keeps the live game.
  */
 @Injectable({ providedIn: 'root' })
 export class GameSessionService {
-  private readonly session = signal<ActiveSession | null>(null);
+  private readonly session = signal<ActiveSession | null>(loadActiveSession());
 
   readonly players = computed(() => this.session()?.players ?? []);
   readonly mode = computed<GameMode | null>(() => this.session()?.mode ?? null);
@@ -87,7 +89,7 @@ export class GameSessionService {
 
     if (mode === 'x01') {
       const gameState = createX01Game(orderedPlayers, settings);
-      this.session.set({
+      this.commit({
         mode,
         players: orderedPlayers,
         status: gameState.status,
@@ -99,7 +101,7 @@ export class GameSessionService {
     }
 
     const gameState = createCricketGame(orderedPlayers);
-    this.session.set({
+    this.commit({
       mode,
       players: orderedPlayers,
       status: gameState.status,
@@ -141,7 +143,12 @@ export class GameSessionService {
 
   /** Clear the session (new game / leaving a match). */
   reset(): void {
-    this.session.set(null);
+    this.commit(null);
+  }
+
+  private commit(session: ActiveSession | null): void {
+    this.session.set(session);
+    saveActiveSession(session);
   }
 
   private runEngine(
@@ -153,7 +160,7 @@ export class GameSessionService {
 
     if (session.mode === 'x01') {
       const outcome = x01(session.gameState);
-      this.session.set({
+      this.commit({
         ...session,
         status: outcome.state.status,
         winnerId: outcome.state.winnerId,
@@ -163,7 +170,7 @@ export class GameSessionService {
     }
 
     const outcome = cricket(session.gameState);
-    this.session.set({
+    this.commit({
       ...session,
       status: outcome.state.status,
       winnerId: outcome.state.winnerId,
