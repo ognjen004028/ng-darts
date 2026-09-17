@@ -1,11 +1,17 @@
+.scoreboard-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
 .scoreboard {
   border-collapse: collapse;
-  margin-bottom: 1rem;
 
   th,
   td {
-    min-width: 3rem;
-    padding: 0.4rem 0.6rem;
+    min-width: 3.25rem;
+    padding: 0.25rem 0.4rem;
     text-align: center;
     border-bottom: 1px solid var(--color-row-border);
   }
@@ -15,18 +21,99 @@
     font-weight: 600;
   }
 
-  th.active,
-  td.active {
-    background: var(--color-active);
-  }
-
-  td.closed {
-    font-weight: 700;
-    color: var(--color-closed);
-  }
-
   tfoot .points-cell {
     font-weight: 700;
     border-top: 2px solid var(--color-points-border);
+  }
+}
+
+.mark-hit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  vertical-align: middle;
+}
+
+button.mark-hit {
+  cursor: pointer;
+}
+
+.mark {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 2.4rem;
+  height: 1.35rem;
+}
+
+.mark-0 {
+  border: 3px solid var(--color-slot-border);
+  border-radius: 999px;
+}
+
+.mark-1::before,
+.mark-2::before,
+.mark-2::after,
+.mark-closed::before,
+.mark-closed::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2.05rem;
+  height: 3px;
+  background: var(--color-closed);
+  border-radius: 2px;
+}
+
+.mark-1::before {
+  transform: translate(-50%, -50%) rotate(-40deg);
+}
+
+.mark-2::before,
+.mark-closed::before {
+  transform: translate(-50%, -50%) rotate(-40deg);
+}
+
+.mark-2::after,
+.mark-closed::after {
+  transform: translate(-50%, -50%) rotate(40deg);
+}
+
+.mark-closed {
+  border: 3px solid var(--color-closed);
+  border-radius: 999px;
+}
+
+.mark-closed::before,
+.mark-closed::after {
+  width: 1.55rem;
+}
+
+.undo,
+.winner-banner button {
+  min-height: 44px;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-size: 1rem;
+}
+
+.undo {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  margin-top: 1rem;
+
+  &:disabled {
+    opacity: 0.4;
   }
 }

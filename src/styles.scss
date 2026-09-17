@@ -18,6 +18,17 @@
   --radius-banner: 0.5rem;
 }
 
+html,
+body {
+  margin: 0;
+}
+
+body {
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-family: system-ui, sans-serif;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

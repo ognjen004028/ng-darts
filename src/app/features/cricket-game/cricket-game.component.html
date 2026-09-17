@@ -1,20 +1,22 @@
 <h1>Cricket</h1>
 
 @if (session.cricketGameState(); as state) {
-  <app-game-shell
-    [finished]="state.status === 'finished'"
-    [winnerName]="winnerName()"
-    [draw]="state.status === 'finished' && !state.winnerId"
-    [message]="message()"
-    [currentPlayerName]="currentPlayerName()"
-    [turn]="state.currentTurn"
-    [undoDisabled]="!canUndo()"
-    [endTurnDisabled]="!canEndTurn()"
-    (dartThrow)="onDart($event)"
-    (undo)="onUndo()"
-    (endTurn)="onEndTurn()"
-    (newGame)="newGame()"
-  >
+  @if (state.status === 'finished') {
+    <div class="winner-banner">
+      @if (winnerName(); as name) {
+        <h2><span aria-hidden="true">🎯</span> {{ name }} wins!</h2>
+      } @else {
+        <h2><span aria-hidden="true">🤝</span> Draw!</h2>
+      }
+      <button type="button" (click)="newGame()">New game</button>
+    </div>
+  }
+
+  @if (message(); as msg) {
+    <p class="message" aria-live="polite">{{ msg }}</p>
+  }
+
+  <div class="scoreboard-wrap">
     <table class="scoreboard">
       <caption class="visually-hidden">
         Cricket scoreboard
@@ -23,7 +25,7 @@
         <tr>
           <th class="target-col" scope="col"><span class="visually-hidden">Target</span></th>
           @for (player of session.players(); track player.id) {
-            <th scope="col" [class.active]="player.id === currentPlayerId()">{{ player.name }}</th>
+            <th scope="col">{{ player.name }}</th>
           }
         </tr>
       </thead>
@@ -32,8 +34,35 @@
           <tr>
             <th class="target-col" scope="row">{{ row.label }}</th>
             @for (cell of row.cells; track cell.playerId) {
-              <td [class.closed]="cell.closed" [class.active]="cell.playerId === currentPlayerId()">
-                {{ cell.marks }}
+              <td [class.closed]="cell.closed">
+                @if (cell.tappable) {
+                  <button
+                    type="button"
+                    class="mark-hit"
+                    (click)="onTargetTap(row.target, cell)"
+                    [attr.aria-label]="markLabel(row.label, cell)"
+                  >
+                    <span
+                      class="mark"
+                      [class.mark-0]="cell.marks === 0"
+                      [class.mark-1]="cell.marks === 1"
+                      [class.mark-2]="cell.marks === 2"
+                      [class.mark-closed]="cell.marks >= 3"
+                      aria-hidden="true"
+                    ></span>
+                  </button>
+                } @else {
+                  <span class="mark-hit" [attr.aria-label]="markLabel(row.label, cell)">
+                    <span
+                      class="mark"
+                      [class.mark-0]="cell.marks === 0"
+                      [class.mark-1]="cell.marks === 1"
+                      [class.mark-2]="cell.marks === 2"
+                      [class.mark-closed]="cell.marks >= 3"
+                      aria-hidden="true"
+                    ></span>
+                  </span>
+                }
               </td>
             }
           </tr>
@@ -43,14 +72,16 @@
         <tr>
           <th class="target-col" scope="row">Points</th>
           @for (player of session.players(); track player.id) {
-            <td class="points-cell" [class.active]="player.id === currentPlayerId()">
+            <td class="points-cell">
               {{ state.players[player.id].points }}
             </td>
           }
         </tr>
       </tfoot>
     </table>
-  </app-game-shell>
+  </div>
+
+  <button type="button" class="undo" (click)="onUndo()" [disabled]="!canUndo()">Undo</button>
 } @else {
   <p>No active session.</p>
 }

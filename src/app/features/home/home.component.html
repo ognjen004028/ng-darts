@@ -1,21 +1,29 @@
-<h1>Home</h1>
+<main class="home">
+  <h1>Home</h1>
 
-<label for="gamemode">Pick a gamemode</label>
-<select id="gamemode" [(ngModel)]="selectedGamemode">
-  @for (mode of gameModes; track mode) {
-    <option [value]="mode">{{ mode }}</option>
+  <div class="field">
+    <label for="gamemode">Pick a gamemode</label>
+    <select id="gamemode" [(ngModel)]="selectedGamemode">
+      @for (mode of gameModes; track mode) {
+        <option [value]="mode">{{ mode }}</option>
+      }
+    </select>
+  </div>
+
+  @if (selectedGamemode === 'x01') {
+    <div class="field">
+      <label for="x01-score">Starting score</label>
+      <select id="x01-score" [(ngModel)]="selectedX01Score">
+        @for (score of x01Scores; track score) {
+          <option [value]="score">{{ score }}</option>
+        }
+      </select>
+    </div>
   }
-</select>
 
-@if (selectedGamemode === 'x01') {
-  <label for="x01-score">Starting score</label>
-  <select id="x01-score" [(ngModel)]="selectedX01Score">
-    @for (score of x01Scores; track score) {
-      <option [value]="score">{{ score }}</option>
-    }
-  </select>
-}
+  <app-add-players (playersChange)="onPlayersChange($event)" />
 
-<app-add-players (playersChange)="onPlayersChange($event)" />
-
-<button type="button" (click)="startGame()" [disabled]="players.length === 0">Start game</button>
+  <button type="button" class="start" (click)="startGame()" [disabled]="players.length === 0">
+    Start game
+  </button>
+</main>
