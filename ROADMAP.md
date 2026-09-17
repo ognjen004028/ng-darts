@@ -52,7 +52,7 @@
 | `turn-summary` / `game-actions` widgets                    | ✅                                                                   |
 | X01 game screen (scoreboard, undo, bust, win banner)       | ✅                                                                   |
 | Styling                                                    | ✅ phone-first; Home / add-players / app shell SCSS; ~44px tap targets |
-| Home: X01 double in / double out                           | ◻️ Phase 5.1b (engine defaults already match RULES.md)               |
+| Home: X01 double in / double out                           | ✅ Off / On selects; defaults Off / On per RULES.md                  |
 | Persist live session                                       | ◻️ Phase 5.2                                                         |
 | Match history screen                                       | ◻️ Phase 5.2b                                                        |
 | Rematch / leave / resume                                   | ◻️ Phase 5.3                                                         |
@@ -142,7 +142,7 @@ Block `/game/*` when there is no valid session → redirect to `/`.
     viewport meta in `src/index.html`. Do not use hover-only controls.
   - Use the CSS variables already in `src/styles.scss`. Do not add a design system.
 
-- [ ] **5.1b — X01 settings on Home**
+- [x] **5.1b — X01 settings on Home**
   Engine already has `doubleIn` / `doubleOut`. Home currently sends only
   `startingScore`. Add two toggles. Defaults stay Off / On per `RULES.md`.
   Do not add Cricket setting UI. Targets and standard scoring stay fixed.
@@ -222,7 +222,7 @@ Run items in this sequence — each builds on the previous:
 8. 3.2 + 3.3 → X01 screen loop ✅
 9. 4.1 + 4.2 → Cricket ✅
 10. 5.1 → design pass ✅
-11. 5.1b → Home double in/out
+11. 5.1b → Home double in/out ✅
 12. 5.2 → persist live session
 13. 5.2b → match history
 14. 5.3 → rematch / leave / resume

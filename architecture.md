@@ -11,7 +11,7 @@
 ## Goals
 
 - Home page: choose game mode (Cricket or X01)
-- X01: starting score (301 / 501 / 701). Double in / double out exist on the engine; Home exposes them in Phase 5.1b
+- X01: starting score (301 / 501 / 701). Home exposes double in (default Off) and double out (default On)
 - Up to **4 addable players** per match
 - Pass-and-play on a single device (MVP in the browser, then the same UI on a phone)
 - Domain rules in **pure TypeScript** (testable, backend-agnostic later)
@@ -188,7 +188,7 @@ UI shows messages from engine results — **do not duplicate rules in templates*
 
 - `AddPlayersComponent`: child-owned player list UI
 - Emits to parent via `output()`
-- `HomeComponent`: holds `selectedGamemode`, `selectedX01Score`, `players`
+- `HomeComponent`: holds `selectedGamemode`, `selectedX01Score`, `selectedDoubleIn`, `selectedDoubleOut`, `players`
 
 **`GameSessionService`** in `state/` is the single source of truth for the live match:
 
@@ -266,9 +266,9 @@ Do not add Capacitor plugins in Phase 5.
 
 - Gamemode select: `cricket` | `x01`
 - Conditional x01 score select: `@if (selectedGamemode === 'x01')`
+- Conditional x01 Double in / Double out On/Off selects (defaults Off / On)
 - `<app-add-players (playersChange)="...">`
 - **Start game** button → validate → write session → navigate
-- Double in / double out toggles: Phase 5.1b (engine already accepts them)
 
 Requires `FormsModule` in standalone `imports` for `ngModel`.
 
@@ -315,7 +315,7 @@ Do not keep a second rule checklist here. Engines implement [`RULES.md`](./RULES
 
 ## Build Order
 
-Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4 and 5.1 are done. Next: 5.1b (Home double in / double out), then persist, session UX, then Phase 6 (Capacitor Android wrap).
+Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4, 5.1, and 5.1b are done. Next: persist (5.2), session UX, then Phase 6 (Capacitor Android wrap).
 
 ---
 
@@ -418,5 +418,6 @@ flowchart TB
 - [x] X01 game screen wired to session (Phase 3)
 - [x] Cricket engine (Phase 4)
 - [x] Cricket game screen wired to session (Phase 4)
-- [ ] Phase 5 — phone-first design, X01 toggles, persist, session UX
+- [x] Phase 5.1 / 5.1b — phone-first design, Home X01 double in/out
+- [ ] Phase 5.2+ — persist, session UX
 - [ ] Phase 6 — Capacitor Android wrap

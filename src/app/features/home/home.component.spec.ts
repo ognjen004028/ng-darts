@@ -32,6 +32,21 @@ describe('HomeComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('hides double in and double out when the mode is cricket', () => {
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('#x01-double-in')).toBeNull();
+    expect(el.querySelector('#x01-double-out')).toBeNull();
+  });
+
+  it('shows double in and double out when the mode is x01', () => {
+    component.selectedGamemode = 'x01';
+    fixture.detectChanges();
+
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('#x01-double-in')).toBeTruthy();
+    expect(el.querySelector('#x01-double-out')).toBeTruthy();
+  });
+
   it('does not start a session or navigate without players', () => {
     component.players = [];
     component.startGame();
@@ -50,7 +65,21 @@ describe('HomeComponent', () => {
     expect(session.hasSession()).toBe(true);
     expect(session.mode()).toBe('x01');
     expect(session.x01Settings()?.startingScore).toBe(301);
+    expect(session.x01Settings()?.doubleIn).toBe(false);
+    expect(session.x01Settings()?.doubleOut).toBe(true);
     expect(router.navigate).toHaveBeenCalledWith(['/game/x01-game']);
+  });
+
+  it('passes selected double in and double out into the x01 session', () => {
+    component.selectedGamemode = 'x01';
+    component.selectedDoubleIn = true;
+    component.selectedDoubleOut = false;
+    component.players = players;
+
+    component.startGame();
+
+    expect(session.x01Settings()?.doubleIn).toBe(true);
+    expect(session.x01Settings()?.doubleOut).toBe(false);
   });
 
   it('starts a cricket session and navigates to the cricket game route', () => {
@@ -61,6 +90,7 @@ describe('HomeComponent', () => {
 
     expect(session.hasSession()).toBe(true);
     expect(session.mode()).toBe('cricket');
+    expect(session.x01Settings()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/game/cricket-game']);
   });
 });

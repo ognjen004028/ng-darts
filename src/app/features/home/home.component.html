@@ -19,6 +19,22 @@
         }
       </select>
     </div>
+
+    <div class="field">
+      <label for="x01-double-in">Double in</label>
+      <select id="x01-double-in" [(ngModel)]="selectedDoubleIn">
+        <option [ngValue]="false">Off</option>
+        <option [ngValue]="true">On</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="x01-double-out">Double out</label>
+      <select id="x01-double-out" [(ngModel)]="selectedDoubleOut">
+        <option [ngValue]="false">Off</option>
+        <option [ngValue]="true">On</option>
+      </select>
+    </div>
   }
 
   <app-add-players (playersChange)="onPlayersChange($event)" />
