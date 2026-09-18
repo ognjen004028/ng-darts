@@ -7,14 +7,12 @@ describe('messageForResult', () => {
     expect(messageForResult({ type: 'bust', events: [] }, nameOf)).toContain('Bust');
   });
 
-  it('names the winner', () => {
-    expect(messageForResult({ type: 'game_won', winnerId: 'p1', events: [] }, nameOf)).toBe(
-      'Ada wins!',
-    );
+  it('does not write a win into the message line', () => {
+    expect(messageForResult({ type: 'game_won', winnerId: 'p1', events: [] }, nameOf)).toBeNull();
   });
 
-  it('reports a draw', () => {
-    expect(messageForResult({ type: 'draw', events: [] }, nameOf)).toBe('Draw!');
+  it('does not write a draw into the message line', () => {
+    expect(messageForResult({ type: 'draw', events: [] }, nameOf)).toBeNull();
   });
 
   it('passes through an invalid reason', () => {

@@ -1,15 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { LeaveConfirmService } from '../../core/leave-confirm.service';
 import { Player } from '../../domain/models/player';
 import { GameSessionService } from '../../state/game-session.service';
 import { X01GameComponent } from './x01-game.component';
 import { throwAll, x01BustFrom301, x01CheckoutFrom301 } from '../../../testing/darts';
 import { clearPersistedHistory, clearPersistedSession } from '../../../testing/session';
+import { MatchHistoryService } from '../../state/match-history.service';
 
 describe('X01GameComponent', () => {
   let component: X01GameComponent;
   let fixture: ComponentFixture<X01GameComponent>;
   let session: GameSessionService;
+  let history: MatchHistoryService;
+  let leaveConfirm: LeaveConfirmService;
   let router: jasmine.SpyObj<Router>;
 
   const players: Player[] = [
@@ -29,6 +33,8 @@ describe('X01GameComponent', () => {
     fixture = TestBed.createComponent(X01GameComponent);
     component = fixture.componentInstance;
     session = TestBed.inject(GameSessionService);
+    history = TestBed.inject(MatchHistoryService);
+    leaveConfirm = TestBed.inject(LeaveConfirmService);
   });
 
   it('should create', () => {
@@ -97,18 +103,58 @@ describe('X01GameComponent', () => {
     fixture.detectChanges();
     expect(session.status()).toBe('finished');
     expect(session.winnerId()).toBe('p1');
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelector('.winner-banner')?.textContent,
-    ).toContain('Ada wins!');
+    const native = fixture.nativeElement as HTMLElement;
+    expect(native.querySelector('.winner-banner')?.textContent).toContain('Ada wins!');
+    expect(component.message()).toBeNull();
+    expect(native.querySelector('.message')).toBeNull();
   });
 
-  it('new game resets the session and returns home', () => {
+  it('asks to confirm leave while live and cancel keeps the game', async () => {
     session.startGame('x01', players);
     fixture.detectChanges();
+    spyOn(leaveConfirm, 'ask').and.resolveTo(false);
 
-    component.newGame();
+    await component.leave();
+
+    expect(session.hasSession()).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('clears the session and goes home when leave is confirmed', async () => {
+    session.startGame('x01', players);
+    fixture.detectChanges();
+    spyOn(leaveConfirm, 'ask').and.resolveTo(true);
+
+    await component.leave();
 
     expect(session.hasSession()).toBe(false);
     expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('leaves a finished game without confirm', async () => {
+    session.startGame('x01', [{ id: 'p1', name: 'Ada' }], { startingScore: 301 });
+    throwAll((dart) => component.onDart(dart), x01CheckoutFrom301);
+    const ask = spyOn(leaveConfirm, 'ask');
+
+    await component.leave();
+
+    expect(ask).not.toHaveBeenCalled();
+    expect(session.hasSession()).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('rematch stays on the route, resets the engine, and keeps history', () => {
+    session.startGame('x01', [{ id: 'p1', name: 'Ada' }], { startingScore: 301 });
+    fixture.detectChanges();
+    throwAll((dart) => component.onDart(dart), x01CheckoutFrom301);
+    expect(history.matches().length).toBe(1);
+
+    component.rematch();
+    fixture.detectChanges();
+
+    expect(session.status()).toBe('in_progress');
+    expect(session.x01GameState()?.scores['p1']).toBe(301);
+    expect(history.matches().length).toBe(1);
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });

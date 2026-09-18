@@ -12,7 +12,8 @@
     (dartThrow)="onDart($event)"
     (undo)="onUndo()"
     (endTurn)="onEndTurn()"
-    (newGame)="newGame()"
+    (leave)="leave()"
+    (rematch)="rematch()"
   >
     <ul class="scoreboard">
       @for (player of session.players(); track player.id) {

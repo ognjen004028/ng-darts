@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { DartThrow } from '../../domain/models/dart-throw';
 import { GameActionResult, GameSessionService } from '../../state/game-session.service';
 import { GameShellComponent } from '../../shared/game-shell/game-shell.component';
+import { LeaveConfirmService } from '../../core/leave-confirm.service';
 import {
   canEndTurn as isEndTurnAllowed,
   canUndo as isUndoAllowed,
@@ -22,6 +23,7 @@ import { messageForResult } from '../../shared/game-play/result-message';
 })
 export class X01GameComponent {
   private readonly router = inject(Router);
+  private readonly leaveConfirm = inject(LeaveConfirmService);
   readonly session = inject(GameSessionService);
 
   readonly message = signal<string | null>(null);
@@ -59,10 +61,19 @@ export class X01GameComponent {
     this.handleResult(this.session.undoLastThrow());
   }
 
-  /** Leave the finished/live game back to home (session cleared). */
-  newGame(): void {
+  /** Leave to Home. Confirm first while the match is live; finished games leave at once. */
+  async leave(): Promise<void> {
+    if (this.session.status() === 'in_progress') {
+      const ok = await this.leaveConfirm.ask();
+      if (!ok) return;
+    }
     this.session.reset();
-    this.router.navigate(['/']);
+    await this.router.navigate(['/']);
+  }
+
+  rematch(): void {
+    this.session.rematch();
+    this.message.set(null);
   }
 
   private playerName(id: string): string {

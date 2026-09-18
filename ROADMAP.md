@@ -55,7 +55,7 @@
 | Home: X01 double in / double out                           | ✅ Off / On selects; defaults Off / On per RULES.md                  |
 | Persist live session                                       | ✅ localStorage + schema version; refresh keeps `/game/*`            |
 | Match history screen                                       | ✅ Phase 5.2b                                                        |
-| Rematch / leave / resume                                   | ◻️ Phase 5.3                                                         |
+| Rematch / leave / resume                                   | ✅ Phase 5.3                                                         |
 | Capacitor Android wrap                                     | ◻️ Phase 6                                                           |
 
 ---
@@ -159,7 +159,7 @@ Block `/game/*` when there is no valid session → redirect to `/`.
   Store finished matches and add a history screen + route. Not statistics
   (statistics stay Phase 7).
 
-- [ ] **5.3 — UX around the session**
+- [x] **5.3 — UX around the session**
 
   | Gap | Current | Target |
   |-----|---------|--------|

@@ -24,13 +24,15 @@
 ```
 src/app/
 ├── core/                    # App-wide singletons & infrastructure
-│   └── guards/              # e.g. game-session.guard.ts
+│   ├── guards/              # game-session.guard, leave-game.guard
+│   └── leave-confirm.service.ts  # ask/answer for Leave + CanDeactivate
 ├── shared/                  # Reusable UI (no business rules)
 │   ├── add-players/         # Player list UI
 │   ├── dart-input/          # Segment pad
 │   ├── turn-summary/        # Current turn slots
 │   ├── game-actions/        # Undo / End turn
-│   └── game-shell/          # Shared game chrome
+│   ├── game-shell/          # Shared game chrome
+│   └── leave-confirm/       # In-app leave dialog
 ├── domain/                  # Pure TS — no Angular imports
 │   ├── models/              # Player, DartThrow, GameSession, etc.
 │   ├── cricket/             # Cricket engine & rules
@@ -47,14 +49,14 @@ src/app/
 │   └── history-persist.ts   # finished matches, separate key + version
 ├── app.routes.ts
 ├── app.config.ts
-└── app.component.ts         # Shell: <router-outlet /> only
+└── app.component.ts         # Shell: <router-outlet /> + leave-confirm overlay
 ```
 
 ### What goes where
 
 | Folder | Purpose | Examples |
 |--------|---------|----------|
-| `core/` | One-instance app infrastructure | Route guards, future HTTP interceptors, app config |
+| `core/` | One-instance app infrastructure | Route guards, leave confirm, future HTTP interceptors |
 | `shared/` | Reusable UI used on multiple pages | `add-players`, dart input, scoreboard rows |
 | `domain/` | Business types & rule engines | `Player`, `throwDart()`, bust logic |
 | `features/` | Full pages loaded by the router | Home, game screens |
@@ -87,6 +89,10 @@ Home owns setup. There is no dedicated setup route.
   → Start
   → /game/cricket-game  OR  /game/x01-game
 
+/  (Home, live session stored)
+  → Resume → same /game/* (scores kept)
+  → New game → clear live session, stay on Home
+
 /  (Home)
   → Match history
   → /history
@@ -99,6 +105,13 @@ Implemented in `core/guards/game-session.guard.ts`:
 - Block `/game/*` if there is no valid session
 - Block a game route when the session mode does not match the route
 - Redirect to `/`
+
+Implemented in `core/guards/leave-game.guard.ts` (`CanDeactivate` on `/game/*`):
+
+- Confirm in-app when `status === 'in_progress'`
+- Keep the session after confirm so Home can Resume
+- Finished games may leave with no confirm
+- Do not use `beforeunload`
 
 The session is stored in `localStorage` with a schema version. A page refresh
 on `/game/*` stays on the game when the stored session is valid. The guard
@@ -208,7 +221,7 @@ UI shows messages from engine results — **do not duplicate rules in templates*
 
 - `players`, `mode`, `x01Settings` / `cricketSettings`, `x01GameState` / `cricketGameState`
 - Home writes on **Start**; game screens read
-- Actions: `startGame`, `applyThrow`, `endTurn`, `undoLastThrow`, `reset`
+- Actions: `startGame`, `applyThrow`, `endTurn`, `undoLastThrow`, `rematch`, `reset`
 - `signal()` / `computed()` (Angular 19)
 - Persist the live `ActiveSession` in `localStorage` with a schema version (Phase 5.2)
 - Persist finished matches in a **separate** `localStorage` key with its own schema version (Phase 5.2b). Append when the live session becomes `finished`. Undo of a finish retracts that row. `reset` / `startGame` keep history.
@@ -284,6 +297,7 @@ Do not add Capacitor plugins in Phase 5.
 - Conditional x01 Double in / Double out On/Off selects (defaults Off / On)
 - `<app-add-players (playersChange)="...">`
 - **Start game** button → validate → write session → navigate
+- **Resume** + **New game** when a live session is stored (in progress or finished)
 - **Match history** button → `/history`
 
 Requires `FormsModule` in standalone `imports` for `ngModel`.
@@ -303,6 +317,8 @@ Home layout is in `home.component.scss` (phone-first stack).
 - X01: `game-shell` (dart input, turn summary, undo, end turn, winner banner)
 - Cricket: mark-zone scoreboard + Undo (no keypad, no turns)
 - Mode-specific scoreboard (Cricket grid vs X01 remaining scores)
+- Leave (confirm while live), Leave to setup (finished, no confirm), Rematch (same players + settings, stay on route)
+- Win / draw copy is banner only; bust and invalid stay in `.message`
 
 ### History (`features/history/`)
 
@@ -321,6 +337,7 @@ Home layout is in `home.component.scss` (phone-first stack).
 | `turn-summary` | Current turn's darts |
 | `game-actions` | Undo, end turn |
 | `game-shell` | Winner banner, message, dart pad, actions; scoreboard via content |
+| `leave-confirm` | In-app leave dialog (Leave control + CanDeactivate) |
 | Scoreboard pieces | Mode-specific (on each game feature) |
 
 Input components emit `DartThrow`; engines validate.
@@ -337,7 +354,7 @@ Do not keep a second rule checklist here. Engines implement [`RULES.md`](./RULES
 
 ## Build Order
 
-Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4, 5.1, 5.1b, 5.2, and 5.2b are done. Next: session UX (5.3), then Phase 6 (Capacitor Android wrap).
+Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4 and 5.1–5.3 are done. Next: Phase 6 (Capacitor Android wrap).
 
 ---
 
@@ -392,6 +409,7 @@ flowchart TB
         TurnSummary[turn-summary]
         GameActions[game-actions]
         GameShell[game-shell]
+        LeaveConfirm[leave-confirm]
     end
 
     subgraph state [State]
@@ -414,6 +432,8 @@ flowchart TB
     Session --> MatchHistory
     CricketUI --> GameShell
     X01UI --> GameShell
+    CricketUI --> LeaveConfirm
+    X01UI --> LeaveConfirm
     GameShell --> DartInput
     GameShell --> TurnSummary
     GameShell --> GameActions
@@ -448,5 +468,5 @@ flowchart TB
 - [x] Phase 5.1 / 5.1b — phone-first design, Home X01 double in/out
 - [x] Phase 5.2 — persist live session
 - [x] Phase 5.2b — match history
-- [ ] Phase 5.3 — session UX
+- [x] Phase 5.3 — session UX
 - [ ] Phase 6 — Capacitor Android wrap

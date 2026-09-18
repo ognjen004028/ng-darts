@@ -29,5 +29,6 @@ export class GameShellComponent {
   readonly dartThrow = output<DartThrow>();
   readonly undo = output<void>();
   readonly endTurn = output<void>();
-  readonly newGame = output<void>();
+  readonly leave = output<void>();
+  readonly rematch = output<void>();
 }

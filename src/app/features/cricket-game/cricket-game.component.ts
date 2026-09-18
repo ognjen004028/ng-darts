@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router } from '@angular/router';
 import { CricketTarget } from '../../domain/cricket/cricket-engine';
 import { GameActionResult, GameSessionService } from '../../state/game-session.service';
+import { LeaveConfirmService } from '../../core/leave-confirm.service';
 import { canUndo as isUndoAllowed } from '../../shared/game-play/turn-flow';
 import { messageForResult } from '../../shared/game-play/result-message';
 
@@ -33,6 +34,7 @@ interface CricketRow {
 })
 export class CricketGameComponent {
   private readonly router = inject(Router);
+  private readonly leaveConfirm = inject(LeaveConfirmService);
   readonly session = inject(GameSessionService);
 
   readonly targets = computed<CricketTarget[]>(() => this.session.cricketSettings()?.targets ?? []);
@@ -96,10 +98,19 @@ export class CricketGameComponent {
     this.handleResult(this.session.undoLastThrow());
   }
 
-  /** Leave the finished/live game back to home (session cleared). */
-  newGame(): void {
+  /** Leave to Home. Confirm first while the match is live; finished games leave at once. */
+  async leave(): Promise<void> {
+    if (this.session.status() === 'in_progress') {
+      const ok = await this.leaveConfirm.ask();
+      if (!ok) return;
+    }
     this.session.reset();
-    this.router.navigate(['/']);
+    await this.router.navigate(['/']);
+  }
+
+  rematch(): void {
+    this.session.rematch();
+    this.message.set(null);
   }
 
   private playerName(id: string): string {

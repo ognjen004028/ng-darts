@@ -1,0 +1,11 @@
+@if (confirm.open()) {
+  <div class="backdrop">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="leave-title">
+      <p id="leave-title">Leave this game?</p>
+      <div class="actions">
+        <button type="button" (click)="confirm.answer(false)">Cancel</button>
+        <button type="button" class="primary" (click)="confirm.answer(true)">Leave</button>
+      </div>
+    </div>
+  </div>
+}

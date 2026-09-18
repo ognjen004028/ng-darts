@@ -4,15 +4,31 @@
   gap: 1rem;
 }
 
-.winner-banner button {
+.banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.banner-actions button,
+.leave {
   min-height: 44px;
   padding: 0.6rem 1.2rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.banner-actions .primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-primary-contrast);
-  font-size: 1rem;
+}
+
+.leave {
+  align-self: flex-start;
 }
 
 .current-player {

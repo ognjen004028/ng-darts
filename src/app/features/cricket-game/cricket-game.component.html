@@ -8,7 +8,10 @@
       } @else {
         <h2><span aria-hidden="true">🤝</span> Draw!</h2>
       }
-      <button type="button" (click)="newGame()">New game</button>
+      <div class="banner-actions">
+        <button type="button" class="primary" (click)="rematch()">Rematch</button>
+        <button type="button" (click)="leave()">Leave to setup</button>
+      </div>
     </div>
   }
 
@@ -81,6 +84,9 @@
     </table>
   </div>
 
+  @if (state.status === 'in_progress') {
+    <button type="button" class="leave" (click)="leave()">Leave</button>
+  }
   <button type="button" class="undo" (click)="onUndo()" [disabled]="!canUndo()">Undo</button>
 } @else {
   <p>No active session.</p>

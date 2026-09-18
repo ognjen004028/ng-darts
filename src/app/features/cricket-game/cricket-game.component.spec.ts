@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { LeaveConfirmService } from '../../core/leave-confirm.service';
 import { Player } from '../../domain/models/player';
 import { GameSessionService } from '../../state/game-session.service';
+import { MatchHistoryService } from '../../state/match-history.service';
 import { CricketGameComponent } from './cricket-game.component';
 import { cricketCloseAll, throwAll } from '../../../testing/darts';
 import { clearPersistedHistory, clearPersistedSession } from '../../../testing/session';
@@ -10,6 +12,8 @@ describe('CricketGameComponent', () => {
   let component: CricketGameComponent;
   let fixture: ComponentFixture<CricketGameComponent>;
   let session: GameSessionService;
+  let history: MatchHistoryService;
+  let leaveConfirm: LeaveConfirmService;
   let router: jasmine.SpyObj<Router>;
 
   const players: Player[] = [
@@ -29,6 +33,8 @@ describe('CricketGameComponent', () => {
     fixture = TestBed.createComponent(CricketGameComponent);
     component = fixture.componentInstance;
     session = TestBed.inject(GameSessionService);
+    history = TestBed.inject(MatchHistoryService);
+    leaveConfirm = TestBed.inject(LeaveConfirmService);
   });
 
   it('should create', () => {
@@ -105,6 +111,25 @@ describe('CricketGameComponent', () => {
     fixture.detectChanges();
     expect(session.status()).toBe('finished');
     expect(session.winnerId()).toBe('p1');
+    const native = fixture.nativeElement as HTMLElement;
+    expect(native.querySelector('.winner-banner')?.textContent).toContain('Ada wins!');
+    expect(component.message()).toBeNull();
+    expect(native.querySelector('.message')).toBeNull();
+  });
+
+  it('does not put a win in the message when the last tap finishes the game', () => {
+    session.startGame('cricket', players);
+    fixture.detectChanges();
+    throwAll((dart) => session.applyThrow(dart, 'p1'), cricketCloseAll.slice(0, -1));
+    fixture.detectChanges();
+    clickZone(fixture, 'Bull, Ada, 2 marks');
+
+    expect(session.status()).toBe('finished');
+    expect(component.message()).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.message')).toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.winner-banner')?.textContent,
+    ).toContain('Ada wins!');
   });
 
   it('undoes the last tap and restores marks', () => {
@@ -118,14 +143,52 @@ describe('CricketGameComponent', () => {
     expect(markClass(fixture.nativeElement as HTMLElement, '20', 0)).toContain('mark-0');
   });
 
-  it('new game resets the session and returns home', () => {
+  it('asks to confirm leave while live and cancel keeps the game', async () => {
     session.startGame('cricket', players);
     fixture.detectChanges();
+    spyOn(leaveConfirm, 'ask').and.resolveTo(false);
 
-    component.newGame();
+    await component.leave();
+
+    expect(session.hasSession()).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('clears the session and goes home when leave is confirmed', async () => {
+    session.startGame('cricket', players);
+    fixture.detectChanges();
+    spyOn(leaveConfirm, 'ask').and.resolveTo(true);
+
+    await component.leave();
 
     expect(session.hasSession()).toBe(false);
     expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('leaves a finished game without confirm', async () => {
+    session.startGame('cricket', players);
+    throwAll((dart) => session.applyThrow(dart, 'p1'), cricketCloseAll);
+    const ask = spyOn(leaveConfirm, 'ask');
+
+    await component.leave();
+
+    expect(ask).not.toHaveBeenCalled();
+    expect(session.hasSession()).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('rematch stays on the route, resets the engine, and keeps history', () => {
+    session.startGame('cricket', players);
+    throwAll((dart) => session.applyThrow(dart, 'p1'), cricketCloseAll);
+    expect(history.matches().length).toBe(1);
+
+    component.rematch();
+    fixture.detectChanges();
+
+    expect(session.status()).toBe('in_progress');
+    expect(session.cricketGameState()?.players['p1'].marks['20']).toBe(0);
+    expect(history.matches().length).toBe(1);
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
   function clickZone(current: ComponentFixture<CricketGameComponent>, label: string): void {

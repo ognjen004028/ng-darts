@@ -8,13 +8,11 @@ export function messageForResult(
   switch (result.type) {
     case 'bust':
       return 'Bust — turn reverted, next player up.';
-    case 'game_won':
-      return `${playerName(result.winnerId)} wins!`;
     case 'invalid':
       return result.reason;
     case 'success':
-      return null;
+    case 'game_won':
     case 'draw':
-      return 'Draw!';
+      return null;
   }
 }

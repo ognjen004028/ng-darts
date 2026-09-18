@@ -95,19 +95,32 @@ button.mark-hit {
   width: 1.55rem;
 }
 
+.banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .undo,
+.leave,
 .winner-banner button {
   min-height: 44px;
   padding: 0.6rem 1.2rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-button);
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-primary-contrast);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 1rem;
 }
 
-.undo {
+.winner-banner .primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.undo,
+.leave {
   display: block;
   width: 100%;
   max-width: 22rem;
@@ -116,4 +129,10 @@ button.mark-hit {
   &:disabled {
     opacity: 0.4;
   }
+}
+
+.undo {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
 }

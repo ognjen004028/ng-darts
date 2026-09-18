@@ -5,12 +5,16 @@
     } @else if (draw()) {
       <h2><span aria-hidden="true">🤝</span> Draw!</h2>
     }
-    <button type="button" (click)="newGame.emit()">New game</button>
+    <div class="banner-actions">
+      <button type="button" class="primary" (click)="rematch.emit()">Rematch</button>
+      <button type="button" (click)="leave.emit()">Leave to setup</button>
+    </div>
   </div>
 } @else {
   <p class="current-player">
     Up next: <strong>{{ currentPlayerName() }}</strong>
   </p>
+  <button type="button" class="leave" (click)="leave.emit()">Leave</button>
 }
 
 @if (message(); as msg) {

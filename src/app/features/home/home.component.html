@@ -1,6 +1,11 @@
 <main class="home">
   <h1>Home</h1>
 
+  @if (hasLiveGame()) {
+    <button type="button" class="resume" (click)="resume()">Resume</button>
+    <button type="button" class="new-game" (click)="newGame()">New game</button>
+  }
+
   <div class="field">
     <label for="gamemode">Pick a gamemode</label>
     <select id="gamemode" [(ngModel)]="selectedGamemode">

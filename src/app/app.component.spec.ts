@@ -18,5 +18,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('app-leave-confirm')).toBeTruthy();
   });
 });

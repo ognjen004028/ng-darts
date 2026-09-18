@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AddPlayersComponent } from '../../shared/add-players/add-players.component';
@@ -28,6 +28,8 @@ export class HomeComponent {
   selectedDoubleIn = DEFAULT_X01_SETTINGS.doubleIn;
   selectedDoubleOut = DEFAULT_X01_SETTINGS.doubleOut;
 
+  readonly hasLiveGame = computed(() => this.session.hasSession());
+
   onPlayersChange(players: Player[]): void {
     this.players = players;
   }
@@ -47,6 +49,17 @@ export class HomeComponent {
 
     const route = this.selectedGamemode === 'x01' ? '/game/x01-game' : '/game/cricket-game';
     this.router.navigate([route]);
+  }
+
+  resume(): void {
+    const mode = this.session.mode();
+    if (!mode) return;
+    const route = mode === 'x01' ? '/game/x01-game' : '/game/cricket-game';
+    this.router.navigate([route]);
+  }
+
+  newGame(): void {
+    this.session.reset();
   }
 
   openHistory(): void {

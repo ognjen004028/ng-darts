@@ -148,6 +148,20 @@ export class GameSessionService {
     return result;
   }
 
+  /**
+   * Same players and settings, new engine state. No-op unless the match is finished.
+   * Does not retract history (a rematch is a new live session).
+   */
+  rematch(): void {
+    const current = this.session();
+    if (!current || current.status !== 'finished') return;
+    this.startGame(
+      current.mode,
+      current.players,
+      current.mode === 'x01' ? current.settings : {},
+    );
+  }
+
   /** Clear the session (new game / leaving a match). */
   reset(): void {
     this.commit(null);

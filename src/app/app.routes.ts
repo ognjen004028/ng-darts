@@ -4,6 +4,7 @@ import { HistoryComponent } from './features/history/history.component';
 import { CricketGameComponent } from './features/cricket-game/cricket-game.component';
 import { X01GameComponent } from './features/x01-game/x01-game.component';
 import { gameSessionGuard } from './core/guards/game-session.guard';
+import { leaveGameGuard } from './core/guards/leave-game.guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -12,12 +13,14 @@ export const routes: Routes = [
     path: 'game/cricket-game',
     component: CricketGameComponent,
     canActivate: [gameSessionGuard],
+    canDeactivate: [leaveGameGuard],
     data: { mode: 'cricket' },
   },
   {
     path: 'game/x01-game',
     component: X01GameComponent,
     canActivate: [gameSessionGuard],
+    canDeactivate: [leaveGameGuard],
     data: { mode: 'x01' },
   },
   { path: '**', redirectTo: '' },

@@ -312,4 +312,63 @@ describe('GameSessionService', () => {
       expect(restored.matches()[0].winnerId).toBe('p1');
     });
   });
+
+  describe('rematch', () => {
+    it('starts a new x01 engine with the same players and settings', () => {
+      service.startGame('x01', [players[0]], {
+        startingScore: 301,
+        doubleIn: false,
+        doubleOut: false,
+      });
+      applyDarts(service, x01CheckoutFrom301);
+      expect(history.matches().length).toBe(1);
+
+      service.rematch();
+
+      expect(service.status()).toBe('in_progress');
+      expect(service.winnerId()).toBeNull();
+      expect(service.mode()).toBe('x01');
+      expect(service.players().map((player) => player.id)).toEqual(['p1']);
+      expect(service.x01GameState()?.scores['p1']).toBe(301);
+      expect(service.x01Settings()).toEqual({
+        startingScore: 301,
+        doubleIn: false,
+        doubleOut: false,
+      });
+      expect(history.matches().length).toBe(1);
+    });
+
+    it('does not rematch while the game is in progress', () => {
+      service.startGame('x01', players);
+      service.applyThrow({ kind: 'single', target: 20 });
+
+      service.rematch();
+
+      expect(service.x01GameState()?.scores['p1']).toBe(481);
+    });
+
+    it('keeps the previous cricket history row and appends after a second finish', () => {
+      service.startGame('cricket', players);
+      applyDarts(service, cricketCloseAll, 'p1');
+
+      service.rematch();
+
+      expect(service.status()).toBe('in_progress');
+      expect(service.cricketGameState()?.players['p1'].marks['20']).toBe(0);
+      expect(history.matches().length).toBe(1);
+
+      applyDarts(service, cricketCloseAll, 'p1');
+
+      expect(history.matches().length).toBe(2);
+    });
+
+    it('appends a second x01 history row after rematch then finish', () => {
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
+      service.rematch();
+      applyDarts(service, x01CheckoutFrom301);
+
+      expect(history.matches().length).toBe(2);
+    });
+  });
 });

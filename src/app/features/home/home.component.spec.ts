@@ -101,4 +101,54 @@ describe('HomeComponent', () => {
     component.openHistory();
     expect(router.navigate).toHaveBeenCalledWith(['/history']);
   });
+
+  it('shows start game only when there is no session', () => {
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.resume')).toBeNull();
+    expect(el.querySelector('.new-game')).toBeNull();
+    expect(el.querySelector('.start')).toBeTruthy();
+  });
+
+  it('shows resume and new game when a session exists', () => {
+    session.startGame('x01', players);
+    fixture.detectChanges();
+
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.resume')).toBeTruthy();
+    expect(el.querySelector('.new-game')).toBeTruthy();
+  });
+
+  it('resume navigates to the matching game route and keeps the session', () => {
+    session.startGame('cricket', players);
+    fixture.detectChanges();
+
+    component.resume();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/game/cricket-game']);
+    expect(session.hasSession()).toBe(true);
+    expect(session.mode()).toBe('cricket');
+  });
+
+  it('resume navigates to the x01 game route', () => {
+    session.startGame('x01', players);
+    fixture.detectChanges();
+
+    component.resume();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/game/x01-game']);
+    expect(session.hasSession()).toBe(true);
+  });
+
+  it('new game on home clears the live session', () => {
+    session.startGame('x01', players);
+    fixture.detectChanges();
+
+    component.newGame();
+    fixture.detectChanges();
+
+    expect(session.hasSession()).toBe(false);
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.resume')).toBeNull();
+    expect(el.querySelector('.new-game')).toBeNull();
+  });
 });
