@@ -257,8 +257,28 @@ describe('undoLastThrow', () => {
     const { state: s2 } = undoLastThrow(completed);
     expect(currentPlayer(s2)).toBe('p1');
     expect(s2.currentTurn?.throws).toEqual([s(20)]);
-    expect(score(s2, 'p1')).toBe(501);
+    expect(score(s2, 'p1')).toBe(481);
     expect(s2.history.length).toBe(0);
+  });
+
+  it('keeps the remaining score when undoing a completed 3-dart visit', () => {
+    const state = createX01Game(players(2));
+    const completed = throwDart(throwDart(throwDart(state, s(20)).state, s(20)).state, s(20)).state;
+    expect(currentPlayer(completed)).toBe('p2');
+    expect(score(completed, 'p1')).toBe(441);
+
+    const { state: s1 } = undoLastThrow(completed);
+    expect(currentPlayer(s1)).toBe('p1');
+    expect(s1.currentTurn?.throws).toEqual([s(20), s(20), s(20)]);
+    expect(score(s1, 'p1')).toBe(441);
+
+    const { state: s2 } = undoLastThrow(s1);
+    expect(s2.currentTurn?.throws).toEqual([s(20), s(20)]);
+    expect(score(s2, 'p1')).toBe(461);
+
+    const { state: s3 } = undoLastThrow(s2);
+    expect(s3.currentTurn?.throws).toEqual([s(20)]);
+    expect(score(s3, 'p1')).toBe(481);
   });
 
   it('rewinds a finished game back to the checkout turn', () => {
@@ -271,7 +291,7 @@ describe('undoLastThrow', () => {
     expect(s1.winnerId).toBeNull();
     expect(currentPlayer(s1)).toBe('p1');
     expect(s1.currentTurn?.throws).toEqual([d(20)]);
-    expect(score(s1, 'p1')).toBe(40);
+    expect(score(s1, 'p1')).toBe(0);
 
     const { state: s2 } = undoLastThrow(s1);
     expect(s2.currentTurn).toBeNull();

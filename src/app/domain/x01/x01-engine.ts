@@ -316,7 +316,8 @@ function restoreLastTurn(state: X01GameState): X01Outcome {
   const next: X01GameState = {
     ...state,
     history: state.history.slice(0, -1),
-    scores: { ...state.scores, [last.playerId]: last.startScore },
+    // Live score must match the restored darts (same as mid-turn play).
+    scores: { ...state.scores, [last.playerId]: last.endScore },
     currentPlayerIndex: state.playerIds.indexOf(last.playerId),
     currentTurn: { ...last },
   };
