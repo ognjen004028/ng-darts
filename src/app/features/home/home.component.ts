@@ -48,4 +48,8 @@ export class HomeComponent {
     const route = this.selectedGamemode === 'x01' ? '/game/x01-game' : '/game/cricket-game';
     this.router.navigate([route]);
   }
+
+  openHistory(): void {
+    this.router.navigate(['/history']);
+  }
 }

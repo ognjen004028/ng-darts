@@ -1,0 +1,63 @@
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 24rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.back {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.matches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+
+  p {
+    margin: 0;
+  }
+
+  .mode {
+    font-weight: 700;
+  }
+
+  .players,
+  .settings,
+  .when {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+  }
+
+  .outcome {
+    margin-top: 0.35rem;
+  }
+}

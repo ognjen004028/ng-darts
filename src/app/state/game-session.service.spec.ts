@@ -3,10 +3,12 @@ import { Player } from '../domain/models/player';
 import { GameSessionService } from './game-session.service';
 import { SESSION_STORAGE_KEY } from './session-persist';
 import { cricketCloseAll, x01BustFrom301, x01CheckoutFrom301 } from '../../testing/darts';
-import { applyDarts, clearPersistedSession } from '../../testing/session';
+import { applyDarts, clearPersistedHistory, clearPersistedSession } from '../../testing/session';
+import { MatchHistoryService } from './match-history.service';
 
 describe('GameSessionService', () => {
   let service: GameSessionService;
+  let history: MatchHistoryService;
 
   const players: Player[] = [
     { id: 'p1', name: 'Ada' },
@@ -15,8 +17,10 @@ describe('GameSessionService', () => {
 
   beforeEach(() => {
     clearPersistedSession();
+    clearPersistedHistory();
     TestBed.configureTestingModule({});
     service = TestBed.inject(GameSessionService);
+    history = TestBed.inject(MatchHistoryService);
   });
 
   it('should be created', () => {
@@ -220,6 +224,92 @@ describe('GameSessionService', () => {
 
       expect(restored.hasSession()).toBe(false);
       expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    });
+  });
+
+  describe('match history (Phase 5.2b)', () => {
+    it('appends an x01 row when the game is won', () => {
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
+
+      expect(history.matches().length).toBe(1);
+      const row = history.matches()[0];
+      expect(row.mode).toBe('x01');
+      expect(row.winnerId).toBe('p1');
+      expect(row.players.map((player) => player.name)).toEqual(['Ada']);
+      expect(row.settings).toEqual({ startingScore: 301, doubleIn: false, doubleOut: true });
+    });
+
+    it('retracts the row when undo returns a finished game to in_progress', () => {
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
+      expect(history.matches().length).toBe(1);
+
+      service.undoLastThrow();
+
+      expect(service.status()).toBe('in_progress');
+      expect(history.matches().length).toBe(0);
+    });
+
+    it('appends a cricket row when the game is won', () => {
+      service.startGame('cricket', players);
+      applyDarts(service, cricketCloseAll, 'p1');
+
+      expect(history.matches().length).toBe(1);
+      expect(history.matches()[0].mode).toBe('cricket');
+      expect(history.matches()[0].winnerId).toBe('p1');
+      expect(history.matches()[0].settings).toEqual({ scoring: 'standard' });
+    });
+
+    it('appends a cricket draw with a null winner', () => {
+      history.record({
+        mode: 'cricket',
+        players,
+        winnerId: null,
+      });
+
+      expect(history.matches().length).toBe(1);
+      expect(history.matches()[0].winnerId).toBeNull();
+      expect(history.matches()[0].mode).toBe('cricket');
+    });
+
+    it('does not append again while the game stays finished', () => {
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
+      service.applyThrow({ kind: 'miss' });
+
+      expect(history.matches().length).toBe(1);
+    });
+
+    it('keeps history when a finished session is reset', () => {
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
+      service.reset();
+
+      expect(service.hasSession()).toBe(false);
+      expect(history.matches().length).toBe(1);
+    });
+
+    it('keeps history when startGame replaces a finished session', () => {
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
+      service.startGame('cricket', players);
+
+      expect(service.status()).toBe('in_progress');
+      expect(history.matches().length).toBe(1);
+      expect(history.matches()[0].mode).toBe('x01');
+    });
+
+    it('restores history on a new service', () => {
+      service.startGame('x01', [players[0]], { startingScore: 301 });
+      applyDarts(service, x01CheckoutFrom301);
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({});
+      const restored = TestBed.inject(MatchHistoryService);
+
+      expect(restored.matches().length).toBe(1);
+      expect(restored.matches()[0].winnerId).toBe('p1');
     });
   });
 });

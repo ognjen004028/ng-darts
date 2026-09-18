@@ -37,11 +37,14 @@ src/app/
 │   └── x01/                 # X01 engine & rules
 ├── features/                # Routed pages (screens)
 │   ├── home/                # Mode, X01 score, players, Start
+│   ├── history/             # Finished matches
 │   ├── cricket-game/
 │   └── x01-game/
 ├── state/                   # Client session state
 │   ├── game-session.service.ts
-│   └── session-persist.ts   # localStorage + schema version
+│   ├── session-persist.ts   # live session localStorage + schema version
+│   ├── match-history.service.ts
+│   └── history-persist.ts   # finished matches, separate key + version
 ├── app.routes.ts
 ├── app.config.ts
 └── app.component.ts         # Shell: <router-outlet /> only
@@ -55,7 +58,7 @@ src/app/
 | `shared/` | Reusable UI used on multiple pages | `add-players`, dart input, scoreboard rows |
 | `domain/` | Business types & rule engines | `Player`, `throwDart()`, bust logic |
 | `features/` | Full pages loaded by the router | Home, game screens |
-| `state/` | Active match/session on the client | `GameSessionService` |
+| `state/` | Active match/session on the client | `GameSessionService`, match history |
 
 **Not in `core/`:** domain interfaces and game rules → use `domain/models/`.
 
@@ -68,6 +71,7 @@ Angular paths **do not** start with `/` in route config.
 | Route | Component | Purpose |
 |-------|-----------|---------|
 | `''` | `HomeComponent` | Mode selection, x01 score, players |
+| `history` | `HistoryComponent` | Finished matches (no live-session guard) |
 | `game/cricket-game` | `CricketGameComponent` | Live Cricket scoring |
 | `game/x01-game` | `X01GameComponent` | Live X01 scoring |
 | `**` | redirect to `''` | Unknown paths |
@@ -82,6 +86,10 @@ Home owns setup. There is no dedicated setup route.
   → add 1-4 players
   → Start
   → /game/cricket-game  OR  /game/x01-game
+
+/  (Home)
+  → Match history
+  → /history
 ```
 
 ### Guards
@@ -95,6 +103,9 @@ Implemented in `core/guards/game-session.guard.ts`:
 The session is stored in `localStorage` with a schema version. A page refresh
 on `/game/*` stays on the game when the stored session is valid. The guard
 still redirects to Home when there is no valid stored session.
+
+Finished matches use a separate key (`ng-darts.history`) and schema version.
+Do not mix history with the live session payload.
 
 ### Root shell
 
@@ -200,6 +211,7 @@ UI shows messages from engine results — **do not duplicate rules in templates*
 - Actions: `startGame`, `applyThrow`, `endTurn`, `undoLastThrow`, `reset`
 - `signal()` / `computed()` (Angular 19)
 - Persist the live `ActiveSession` in `localStorage` with a schema version (Phase 5.2)
+- Persist finished matches in a **separate** `localStorage` key with its own schema version (Phase 5.2b). Append when the live session becomes `finished`. Undo of a finish retracts that row. `reset` / `startGame` keep history.
 
 ### Future (backend)
 
@@ -272,6 +284,7 @@ Do not add Capacitor plugins in Phase 5.
 - Conditional x01 Double in / Double out On/Off selects (defaults Off / On)
 - `<app-add-players (playersChange)="...">`
 - **Start game** button → validate → write session → navigate
+- **Match history** button → `/history`
 
 Requires `FormsModule` in standalone `imports` for `ngModel`.
 
@@ -290,6 +303,12 @@ Home layout is in `home.component.scss` (phone-first stack).
 - X01: `game-shell` (dart input, turn summary, undo, end turn, winner banner)
 - Cricket: mark-zone scoreboard + Undo (no keypad, no turns)
 - Mode-specific scoreboard (Cricket grid vs X01 remaining scores)
+
+### History (`features/history/`)
+
+- Lists finished matches from `MatchHistoryService` (newest first)
+- Empty list is a valid state
+- No statistics, rematch, or dart-by-dart replay
 
 ---
 
@@ -318,13 +337,13 @@ Do not keep a second rule checklist here. Engines implement [`RULES.md`](./RULES
 
 ## Build Order
 
-Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4, 5.1, 5.1b, and 5.2 are done. Next: match history (5.2b), session UX (5.3), then Phase 6 (Capacitor Android wrap).
+Follow [`ROADMAP.md`](./ROADMAP.md). Phases 0–4, 5.1, 5.1b, 5.2, and 5.2b are done. Next: session UX (5.3), then Phase 6 (Capacitor Android wrap).
 
 ---
 
 ## Deferred (after the Capacitor wrap)
 
-Phase 5.2b adds a simple match-history screen. Phase 6 wraps the app. These stay later:
+Phase 6 wraps the app. These stay later:
 
 - iOS Capacitor project (needs a Mac)
 - Statistics UI over match history
@@ -362,6 +381,7 @@ Standalone components: add all used modules/components to each component's `impo
 flowchart TB
     subgraph features [Features - Pages]
         Home
+        History
         CricketUI[Cricket Game]
         X01UI[X01 Game]
     end
@@ -376,6 +396,7 @@ flowchart TB
 
     subgraph state [State]
         Session[GameSessionService]
+        MatchHistory[MatchHistoryService]
     end
 
     subgraph domain [Domain - Pure TS]
@@ -386,8 +407,11 @@ flowchart TB
 
     Home --> AddPlayers
     Home --> Session
+    Home --> History
+    History --> MatchHistory
     CricketUI --> Session
     X01UI --> Session
+    Session --> MatchHistory
     CricketUI --> GameShell
     X01UI --> GameShell
     GameShell --> DartInput
@@ -423,5 +447,6 @@ flowchart TB
 - [x] Cricket game screen wired to session (Phase 4)
 - [x] Phase 5.1 / 5.1b — phone-first design, Home X01 double in/out
 - [x] Phase 5.2 — persist live session
-- [ ] Phase 5.2b / 5.3 — match history, session UX
+- [x] Phase 5.2b — match history
+- [ ] Phase 5.3 — session UX
 - [ ] Phase 6 — Capacitor Android wrap

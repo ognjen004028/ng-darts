@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Player } from '../domain/models/player';
 import { DartThrow } from '../domain/models/dart-throw';
 import { GameMode, GameStatus } from '../domain/models/game';
@@ -21,6 +21,7 @@ import {
   undoLastThrow as cricketUndoLastThrow,
 } from '../domain/cricket/cricket-engine';
 import { loadActiveSession, saveActiveSession } from './session-persist';
+import { MatchHistoryService } from './match-history.service';
 
 /** Union of engine results returned by the mode-dispatched game actions. */
 export type GameActionResult = X01Outcome['result'] | CricketOutcome['result'];
@@ -53,6 +54,7 @@ export type ActiveSession =
  */
 @Injectable({ providedIn: 'root' })
 export class GameSessionService {
+  private readonly history = inject(MatchHistoryService);
   private readonly session = signal<ActiveSession | null>(loadActiveSession());
 
   readonly players = computed(() => this.session()?.players ?? []);
@@ -138,7 +140,12 @@ export class GameSessionService {
 
   /** Undo the last dart (including busted / winning / drawn turns). Returns the engine result, or null when no game is active. */
   undoLastThrow(): GameActionResult | null {
-    return this.runEngine(engineUndoLastThrow, cricketUndoLastThrow);
+    const previous = this.session();
+    const result = this.runEngine(engineUndoLastThrow, cricketUndoLastThrow);
+    if (previous?.status === 'finished' && this.session()?.status === 'in_progress') {
+      this.history.retractLast();
+    }
+    return result;
   }
 
   /** Clear the session (new game / leaving a match). */
@@ -147,8 +154,25 @@ export class GameSessionService {
   }
 
   private commit(session: ActiveSession | null): void {
+    const previous = this.session();
     this.session.set(session);
     saveActiveSession(session);
+    if (previous?.status === 'in_progress' && session?.status === 'finished') {
+      this.history.record(
+        session.mode === 'x01'
+          ? {
+              mode: 'x01',
+              players: session.players,
+              winnerId: session.winnerId,
+              settings: session.settings,
+            }
+          : {
+              mode: 'cricket',
+              players: session.players,
+              winnerId: session.winnerId,
+            },
+      );
+    }
   }
 
   private runEngine(

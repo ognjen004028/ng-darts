@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Player } from '../../domain/models/player';
 import { GameSessionService } from '../../state/game-session.service';
 import { HomeComponent } from './home.component';
-import { clearPersistedSession } from '../../../testing/session';
+import { clearPersistedHistory, clearPersistedSession } from '../../../testing/session';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -15,6 +15,7 @@ describe('HomeComponent', () => {
 
   beforeEach(async () => {
     clearPersistedSession();
+    clearPersistedHistory();
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     await TestBed.configureTestingModule({
       imports: [HomeComponent],
@@ -94,5 +95,10 @@ describe('HomeComponent', () => {
     expect(session.mode()).toBe('cricket');
     expect(session.x01Settings()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/game/cricket-game']);
+  });
+
+  it('navigates to the history route', () => {
+    component.openHistory();
+    expect(router.navigate).toHaveBeenCalledWith(['/history']);
   });
 });

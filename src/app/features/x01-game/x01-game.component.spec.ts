@@ -4,7 +4,7 @@ import { Player } from '../../domain/models/player';
 import { GameSessionService } from '../../state/game-session.service';
 import { X01GameComponent } from './x01-game.component';
 import { throwAll, x01BustFrom301, x01CheckoutFrom301 } from '../../../testing/darts';
-import { clearPersistedSession } from '../../../testing/session';
+import { clearPersistedHistory, clearPersistedSession } from '../../../testing/session';
 
 describe('X01GameComponent', () => {
   let component: X01GameComponent;
@@ -19,6 +19,7 @@ describe('X01GameComponent', () => {
 
   beforeEach(async () => {
     clearPersistedSession();
+    clearPersistedHistory();
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     await TestBed.configureTestingModule({
       imports: [X01GameComponent],

@@ -54,7 +54,7 @@
 | Styling                                                    | ✅ phone-first; Home / add-players / app shell SCSS; ~44px tap targets |
 | Home: X01 double in / double out                           | ✅ Off / On selects; defaults Off / On per RULES.md                  |
 | Persist live session                                       | ✅ localStorage + schema version; refresh keeps `/game/*`            |
-| Match history screen                                       | ◻️ Phase 5.2b                                                        |
+| Match history screen                                       | ✅ Phase 5.2b                                                        |
 | Rematch / leave / resume                                   | ◻️ Phase 5.3                                                         |
 | Capacitor Android wrap                                     | ◻️ Phase 6                                                           |
 
@@ -155,7 +155,7 @@ Block `/game/*` when there is no valid session → redirect to `/`.
   - Required for Capacitor: the OS can kill the WebView. Stay on `localStorage`
     (no Preferences plugin until the wrap proves it is needed).
 
-- [ ] **5.2b — Simple match history**
+- [x] **5.2b — Simple match history**
   Store finished matches and add a history screen + route. Not statistics
   (statistics stay Phase 7).
 
@@ -224,7 +224,7 @@ Run items in this sequence — each builds on the previous:
 10. 5.1 → design pass ✅
 11. 5.1b → Home double in/out ✅
 12. 5.2 → persist live session ✅
-13. 5.2b → match history
+13. 5.2b → match history ✅
 14. 5.3 → rematch / leave / resume
 15. 6.1 + 6.2 → Capacitor Android wrap
 16. 6.3 → StatusBar / hardware back (optional)

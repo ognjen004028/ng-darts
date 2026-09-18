@@ -6,7 +6,7 @@ import {
   provideRouter,
 } from '@angular/router';
 import { GameSessionService } from '../../state/game-session.service';
-import { clearPersistedSession } from '../../../testing/session';
+import { clearPersistedHistory, clearPersistedSession } from '../../../testing/session';
 import { gameSessionGuard } from './game-session.guard';
 
 describe('gameSessionGuard', () => {
@@ -21,6 +21,7 @@ describe('gameSessionGuard', () => {
 
   beforeEach(() => {
     clearPersistedSession();
+    clearPersistedHistory();
     TestBed.configureTestingModule({
       providers: [provideRouter([])],
     });

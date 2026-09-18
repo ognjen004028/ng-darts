@@ -1,0 +1,21 @@
+<main class="history">
+  <h1>Match history</h1>
+
+  <button type="button" class="back" (click)="goHome()">Back to Home</button>
+
+  @if (matches().length === 0) {
+    <p class="empty">No matches yet.</p>
+  } @else {
+    <ul class="matches">
+      @for (match of matches(); track match.id) {
+        <li class="match">
+          <p class="mode">{{ modeLabel(match) }}</p>
+          <p class="players">{{ playerNames(match) }}</p>
+          <p class="outcome">{{ outcome(match) }}</p>
+          <p class="settings">{{ settingsLabel(match) }}</p>
+          <p class="when">{{ match.finishedAt | date: 'medium' }}</p>
+        </li>
+      }
+    </ul>
+  }
+</main>
