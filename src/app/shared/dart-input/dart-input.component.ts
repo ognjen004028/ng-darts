@@ -6,8 +6,10 @@ export type DartMultiplier = 'single' | 'double' | 'triple';
 /**
  * Touch-friendly dart pad (ROADMAP 3.1). Emits a `DartThrow` per button
  * press; the game engines validate. The selected multiplier applies to the
- * segment grid only — bull and miss are fixed throws (triple bull is not a
- * representable dart).
+ * segment grid and to bull (single 25 / double 50). Triple bull is not a
+ * representable dart: a bull tap with triple selected emits nothing. Miss is
+ * a fixed throw. After a double, triple, bull, or miss, the multiplier
+ * returns to single.
  */
 @Component({
   selector: 'app-dart-input',
@@ -33,6 +35,10 @@ export class DartInputComponent {
     this.multiplier.set(multiplier);
   }
 
+  private resetMultiplier(): void {
+    this.multiplier.set('single');
+  }
+
   throwSegment(segment: NumberSegment): void {
     switch (this.multiplier()) {
       case 'single':
@@ -40,22 +46,32 @@ export class DartInputComponent {
         break;
       case 'double':
         this.dartThrow.emit({ kind: 'double', target: segment });
+        this.resetMultiplier();
         break;
       case 'triple':
         this.dartThrow.emit({ kind: 'triple', target: segment });
+        this.resetMultiplier();
         break;
     }
   }
 
-  throwBullSingle(): void {
-    this.dartThrow.emit({ kind: 'single', target: 'bull' });
-  }
-
-  throwBullDouble(): void {
-    this.dartThrow.emit({ kind: 'double', target: 'bull' });
+  throwBull(): void {
+    switch (this.multiplier()) {
+      case 'single':
+        this.dartThrow.emit({ kind: 'single', target: 'bull' });
+        break;
+      case 'double':
+        this.dartThrow.emit({ kind: 'double', target: 'bull' });
+        this.resetMultiplier();
+        break;
+      case 'triple':
+        this.resetMultiplier();
+        break;
+    }
   }
 
   throwMiss(): void {
     this.dartThrow.emit({ kind: 'miss' });
+    this.resetMultiplier();
   }
 }
