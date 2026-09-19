@@ -21,7 +21,6 @@ describe('GameShellComponent', () => {
 
     expect(native.textContent).toContain('Up next:');
     expect(native.textContent).toContain('Ada');
-    expect(native.textContent).toContain('Leave');
     expect(native.querySelector('.winner-banner')).toBeNull();
   });
 
@@ -33,9 +32,7 @@ describe('GameShellComponent', () => {
     expect(native.querySelector('.winner-banner')?.textContent).toContain('Ada wins!');
     expect(native.querySelector('.winner-banner')?.textContent).toContain('Rematch');
     expect(native.querySelector('.winner-banner')?.textContent).toContain('Leave to setup');
-    const buttons = Array.from(native.querySelectorAll('app-dart-input button'));
-    expect(buttons.length).toBeGreaterThan(0);
-    expect(buttons.every((button) => (button as HTMLButtonElement).disabled)).toBeTrue();
+    expect(native.querySelector('app-dart-input')).toBeNull();
   });
 
   it('shows a draw banner when finished without a winner', () => {

@@ -1,6 +1,7 @@
 .turn-summary {
   display: flex;
   gap: 0.5rem;
+  justify-content: center;
 }
 
 .slot {
@@ -9,13 +10,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed var(--color-slot-border);
+  border: 2px dashed var(--color-slot-border);
   border-radius: 50%;
   color: var(--color-muted);
   font-weight: 600;
 
   &.filled {
     border-style: solid;
+    border-color: var(--color-primary);
     color: var(--color-text);
     background: var(--color-slot-fill);
   }

@@ -1,52 +1,106 @@
-<main class="home">
-  <h1>Home</h1>
+<main class="page home">
+  <header class="top-bar">
+    <h1>Darts Score</h1>
+    <button type="button" class="top-bar-btn end" (click)="openHistory()" aria-label="Match history">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96c-.5-.4-1.04-.72-1.63-.94l-.36-2.54A.5.5 0 0 0 14.48 2h-4.96a.5.5 0 0 0-.5.42l-.36 2.54c-.59.22-1.13.54-1.63.94l-2.39-.96a.5.5 0 0 0-.61.22L1.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.23.41.32.64.22l2.39-.96c.5.4 1.04.72 1.63.94l.36 2.54c.05.24.26.42.5.42h4.96a.5.5 0 0 0 .5-.42l.36-2.54c.59-.22 1.13-.54 1.63-.94l2.39.96c.23.1.5.01.64-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2"
+        />
+      </svg>
+    </button>
+  </header>
 
-  @if (hasLiveGame()) {
-    <button type="button" class="resume" (click)="resume()">Resume</button>
-    <button type="button" class="new-game" (click)="newGame()">New game</button>
-  }
+  <div class="body">
+    @if (hasLiveGame()) {
+      <div class="live-actions">
+        <button type="button" class="resume" (click)="resume()">Resume</button>
+        <button type="button" class="new-game" (click)="newGame()">New game</button>
+      </div>
+    }
 
-  <div class="field">
-    <label for="gamemode">Pick a gamemode</label>
-    <select id="gamemode" [(ngModel)]="selectedGamemode">
-      @for (mode of gameModes; track mode) {
-        <option [value]="mode">{{ mode }}</option>
-      }
-    </select>
+    <app-add-players (playersChange)="onPlayersChange($event)" />
+
+    <svg class="darts" viewBox="0 0 140 140" aria-hidden="true" focusable="false">
+      <g
+        fill="none"
+        stroke="currentColor"
+        stroke-width="3.25"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <g transform="translate(70 70) rotate(40)">
+          <path d="M0 -64 L6 -40 H-6 Z" />
+          <line x1="0" y1="-40" x2="0" y2="-18" />
+          <rect x="-6" y="-18" width="12" height="38" rx="3" />
+          <line x1="0" y1="20" x2="0" y2="28" />
+          <path d="M0 26 C-17 42 -18 58 0 74 C18 58 17 42 0 26" />
+        </g>
+        <g transform="translate(70 70) rotate(-40)">
+          <path d="M0 -64 L6 -40 H-6 Z" />
+          <line x1="0" y1="-40" x2="0" y2="-18" />
+          <rect x="-6" y="-18" width="12" height="38" rx="3" />
+          <line x1="0" y1="20" x2="0" y2="28" />
+          <path d="M0 26 C-17 42 -18 58 0 74 C18 58 17 42 0 26" />
+        </g>
+      </g>
+    </svg>
+
+    <div class="mode-toggle" role="radiogroup" aria-label="Game mode">
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="selectedGamemode === 'x01'"
+        [class.active]="selectedGamemode === 'x01'"
+        (click)="selectGamemode('x01')"
+      >
+        X01
+      </button>
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="selectedGamemode === 'cricket'"
+        [class.active]="selectedGamemode === 'cricket'"
+        (click)="selectGamemode('cricket')"
+      >
+        Cricket
+      </button>
+    </div>
+
+    @if (selectedGamemode === 'x01') {
+      <div class="setup-block">
+        <p class="setup-label">Starting score</p>
+        <button type="button" id="x01-score" class="card-btn" (click)="cycleX01Score()">
+          {{ selectedX01Score }}
+        </button>
+      </div>
+
+      <div class="setup-row">
+        <button
+          type="button"
+          id="x01-double-in"
+          class="card-btn"
+          [class.on]="selectedDoubleIn"
+          (click)="selectedDoubleIn = !selectedDoubleIn"
+        >
+          <span>Double in</span>
+          <strong>{{ selectedDoubleIn ? 'On' : 'Off' }}</strong>
+        </button>
+        <button
+          type="button"
+          id="x01-double-out"
+          class="card-btn"
+          [class.on]="selectedDoubleOut"
+          (click)="selectedDoubleOut = !selectedDoubleOut"
+        >
+          <span>Double out</span>
+          <strong>{{ selectedDoubleOut ? 'On' : 'Off' }}</strong>
+        </button>
+      </div>
+    }
   </div>
 
-  @if (selectedGamemode === 'x01') {
-    <div class="field">
-      <label for="x01-score">Starting score</label>
-      <select id="x01-score" [(ngModel)]="selectedX01Score">
-        @for (score of x01Scores; track score) {
-          <option [value]="score">{{ score }}</option>
-        }
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="x01-double-in">Double in</label>
-      <select id="x01-double-in" [(ngModel)]="selectedDoubleIn">
-        <option [ngValue]="false">Off</option>
-        <option [ngValue]="true">On</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="x01-double-out">Double out</label>
-      <select id="x01-double-out" [(ngModel)]="selectedDoubleOut">
-        <option [ngValue]="false">Off</option>
-        <option [ngValue]="true">On</option>
-      </select>
-    </div>
-  }
-
-  <app-add-players (playersChange)="onPlayersChange($event)" />
-
   <button type="button" class="start" (click)="startGame()" [disabled]="players.length === 0">
-    Start game
+    START
   </button>
-
-  <button type="button" class="history" (click)="openHistory()">Match history</button>
 </main>

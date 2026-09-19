@@ -1,21 +1,28 @@
-<main class="history">
-  <h1>Match history</h1>
+<main class="page">
+  <header class="top-bar">
+    <button type="button" class="top-bar-btn start" (click)="goHome()" aria-label="Back to Home">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+      </svg>
+    </button>
+    <h1>Match history</h1>
+  </header>
 
-  <button type="button" class="back" (click)="goHome()">Back to Home</button>
-
-  @if (matches().length === 0) {
-    <p class="empty">No matches yet.</p>
-  } @else {
-    <ul class="matches">
-      @for (match of matches(); track match.id) {
-        <li class="match">
-          <p class="mode">{{ modeLabel(match) }}</p>
-          <p class="players">{{ playerNames(match) }}</p>
-          <p class="outcome">{{ outcome(match) }}</p>
-          <p class="settings">{{ settingsLabel(match) }}</p>
-          <p class="when">{{ match.finishedAt | date: 'medium' }}</p>
-        </li>
-      }
-    </ul>
-  }
+  <div class="page-body">
+    @if (matches().length === 0) {
+      <p class="empty">No matches yet.</p>
+    } @else {
+      <ul class="matches">
+        @for (match of matches(); track match.id) {
+          <li class="match">
+            <p class="mode">{{ modeLabel(match) }}</p>
+            <p class="players">{{ playerNames(match) }}</p>
+            <p class="outcome">{{ outcome(match) }}</p>
+            <p class="settings">{{ settingsLabel(match) }}</p>
+            <p class="when">{{ match.finishedAt | date: 'medium' }}</p>
+          </li>
+        }
+      </ul>
+    }
+  </div>
 </main>

@@ -1,38 +1,42 @@
 <div class="add-players">
-  <h3>Players</h3>
-
-  <ul>
-    @for (player of players; track player.id) {
-      <li>
-        <label [attr.for]="'player-name-' + player.id" class="visually-hidden">
-          Name for {{ player.name }}
-        </label>
-        <input
-          type="text"
-          [id]="'player-name-' + player.id"
-          [ngModel]="player.name"
-          (ngModelChange)="onNameChange(player.id, $event)"
-        />
-        @if (players.length > 1) {
-          <button
-            type="button"
-            (click)="removePlayer(player.id)"
-            [attr.aria-label]="'Remove ' + player.name"
-          >
-            Remove
-          </button>
-        }
-      </li>
+  <div class="grid">
+    @for (index of slots; track index) {
+      @if (players[index]; as player) {
+        <div class="slot player">
+          <label [attr.for]="'player-name-' + player.id" class="visually-hidden">
+            Name for {{ player.name }}
+          </label>
+          <input
+            type="text"
+            [id]="'player-name-' + player.id"
+            [ngModel]="player.name"
+            (ngModelChange)="onNameChange(player.id, $event)"
+          />
+          @if (players.length > 1) {
+            <button
+              type="button"
+              class="remove"
+              (click)="removePlayer(player.id)"
+              [attr.aria-label]="'Remove ' + player.name"
+            >
+              ×
+            </button>
+          }
+        </div>
+      } @else {
+        <button type="button" class="slot add" (click)="addPlayer()">Add player</button>
+      }
     }
-  </ul>
+  </div>
 
-  @if (players.length < maxPlayers) {
-    <div class="add-row">
-      <label for="new-player-name">Player name</label>
-      <div class="add-controls">
-        <input id="new-player-name" [(ngModel)]="newPlayerName" />
-        <button type="button" (click)="addPlayer()">Add player</button>
-      </div>
-    </div>
-  }
+  <svg class="people" viewBox="0 0 72 48" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round">
+      <circle cx="16" cy="11" r="5.5" />
+      <path d="M6 36c1.2-8 5.2-13 10-13s8.8 5 10 13" />
+      <circle cx="56" cy="11" r="5.5" />
+      <path d="M46 36c1.2-8 5.2-13 10-13s8.8 5 10 13" />
+      <circle cx="36" cy="9" r="6.5" />
+      <path d="M22 40c1.6-10 7-16 14-16s12.4 6 14 16" />
+    </g>
+  </svg>
 </div>

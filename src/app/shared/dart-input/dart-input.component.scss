@@ -3,7 +3,6 @@
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
-  max-width: 22rem;
 }
 
 .multiplier,
@@ -30,10 +29,12 @@
 button {
   min-height: 44px;
   min-width: 44px;
-  padding: 0.6rem;
-  border: 1px solid var(--color-border);
+  padding: 0.45rem;
+  border: 0;
   border-radius: var(--radius-button);
   background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
   font-size: 1rem;
   cursor: pointer;
 

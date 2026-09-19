@@ -40,10 +40,12 @@ describe('DartInputComponent', () => {
     ]);
   });
 
-  it('emits bull and miss as fixed throws (triple bull is not representable)', () => {
+  it('emits bull from the selected multiplier; triple bull is not representable', () => {
+    component.throwBull();
+    component.selectMultiplier('double');
+    component.throwBull();
     component.selectMultiplier('triple');
-    component.throwBullSingle();
-    component.throwBullDouble();
+    component.throwBull();
     component.throwMiss();
 
     expect(emitted).toEqual([
@@ -56,8 +58,7 @@ describe('DartInputComponent', () => {
   it('renders one button per segment plus bull and miss buttons', () => {
     const native = fixture.nativeElement as HTMLElement;
     expect(native.querySelectorAll('.segments button').length).toBe(20);
-    expect(native.textContent).toContain('Bull 25');
-    expect(native.textContent).toContain('Bull 50');
+    expect(native.textContent).toContain('25');
     expect(native.textContent).toContain('Miss');
   });
 

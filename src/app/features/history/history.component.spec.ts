@@ -65,7 +65,7 @@ describe('HistoryComponent', () => {
   });
 
   it('goes back to Home', () => {
-    fixture.nativeElement.querySelector('.back').click();
+    fixture.nativeElement.querySelector('[aria-label="Back to Home"]').click();
     expect(router.navigate).toHaveBeenCalledWith(['/']);
   });
 });

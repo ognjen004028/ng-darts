@@ -11,13 +11,12 @@ import { Player } from '../../domain/models/player';
 })
 export class AddPlayersComponent implements OnInit {
   readonly maxPlayers = 4;
+  readonly slots = [0, 1, 2, 3];
 
   players: Player[] = [
     { id: crypto.randomUUID(), name: 'Player 1' },
     { id: crypto.randomUUID(), name: 'Player 2' },
   ];
-
-  newPlayerName = '';
 
   readonly playersChange = output<Player[]>();
 
@@ -32,11 +31,11 @@ export class AddPlayersComponent implements OnInit {
 
   addPlayer(): void {
     if (this.players.length >= this.maxPlayers) return;
-    const name = this.newPlayerName.trim();
-    if (!name) return;
 
-    this.players = [...this.players, { id: crypto.randomUUID(), name }];
-    this.newPlayerName = '';
+    this.players = [
+      ...this.players,
+      { id: crypto.randomUUID(), name: `Player ${this.players.length + 1}` },
+    ];
     this.playersChange.emit(this.players);
   }
 

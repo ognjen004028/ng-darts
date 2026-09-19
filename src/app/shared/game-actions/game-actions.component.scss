@@ -1,25 +1,26 @@
 .game-actions {
   display: flex;
   gap: 0.75rem;
-  justify-content: center;
   width: 100%;
-  max-width: 22rem;
+  padding: 0.15rem 0 calc(0.65rem + env(safe-area-inset-bottom));
 }
 
 button {
   flex: 1;
-  min-height: 44px;
+  min-height: 3.5rem;
   padding: 0.6rem 1.2rem;
-  border: 1px solid var(--color-border);
+  border: 0;
   border-radius: var(--radius-button);
   background: var(--color-surface);
-  font-size: 1rem;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.05rem;
   cursor: pointer;
 
   &.primary {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
+    background: var(--color-accent);
     color: var(--color-primary-contrast);
+    font-weight: 700;
   }
 
   &:disabled {

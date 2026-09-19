@@ -7,16 +7,17 @@
   justify-content: center;
   padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
     max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
-  background: rgb(0 0 0 / 40%);
+  background: rgb(0 0 0 / 55%);
 }
 
 .dialog {
   width: 100%;
   max-width: 22rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
+  padding: 1.15rem;
+  border: 0;
   border-radius: var(--radius-banner);
   background: var(--color-surface);
+  color: var(--color-text);
 }
 
 #leave-title {
@@ -33,15 +34,16 @@ button {
   flex: 1;
   min-height: 44px;
   padding: 0.6rem 1.2rem;
-  border: 1px solid var(--color-border);
+  border: 0;
   border-radius: var(--radius-button);
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
   color: var(--color-text);
+  font: inherit;
   font-size: 1rem;
+  cursor: pointer;
 
   &.primary {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
+    background: var(--color-accent);
     color: var(--color-primary-contrast);
   }
 }

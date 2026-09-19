@@ -36,25 +36,15 @@ describe('AddPlayersComponent', () => {
     expect(emitted.at(-1)).not.toBe(emitted[0]);
   });
 
-  it('adds a trimmed name and ignores a blank add', () => {
-    component.newPlayerName = '  Ada  ';
+  it('adds a default-named player', () => {
     component.addPlayer();
     expect(component.players.length).toBe(3);
-    expect(component.players[2].name).toBe('Ada');
-    expect(component.newPlayerName).toBe('');
-
-    const count = component.players.length;
-    component.newPlayerName = '   ';
-    component.addPlayer();
-    expect(component.players.length).toBe(count);
+    expect(component.players[2].name).toBe('Player 3');
   });
 
   it('allows at most four players and at least one', () => {
-    component.newPlayerName = 'Three';
     component.addPlayer();
-    component.newPlayerName = 'Four';
     component.addPlayer();
-    component.newPlayerName = 'Five';
     component.addPlayer();
     expect(component.players.length).toBe(4);
 

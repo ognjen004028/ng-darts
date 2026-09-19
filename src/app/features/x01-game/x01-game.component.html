@@ -1,29 +1,38 @@
-<h1>X01 Game</h1>
+<main class="page">
+  <header class="top-bar">
+    <button type="button" class="top-bar-btn start" (click)="leave()" aria-label="Leave">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+      </svg>
+    </button>
+    <h1>X01</h1>
+  </header>
 
-@if (session.x01GameState(); as state) {
-  <app-game-shell
-    [finished]="state.status === 'finished'"
-    [winnerName]="winnerName()"
-    [message]="message()"
-    [currentPlayerName]="currentPlayerName()"
-    [turn]="state.currentTurn"
-    [undoDisabled]="!canUndo()"
-    [endTurnDisabled]="!canEndTurn()"
-    (dartThrow)="onDart($event)"
-    (undo)="onUndo()"
-    (endTurn)="onEndTurn()"
-    (leave)="leave()"
-    (rematch)="rematch()"
-  >
-    <ul class="scoreboard">
-      @for (player of session.players(); track player.id) {
-        <li [class.active]="player.id === state.playerIds[state.currentPlayerIndex]">
-          <span class="name">{{ player.name }}</span>
-          <span class="score">{{ state.scores[player.id] }}</span>
-        </li>
-      }
-    </ul>
-  </app-game-shell>
-} @else {
-  <p>No active session.</p>
-}
+  @if (session.x01GameState(); as state) {
+    <app-game-shell
+      [finished]="state.status === 'finished'"
+      [winnerName]="winnerName()"
+      [message]="message()"
+      [currentPlayerName]="currentPlayerName()"
+      [turn]="state.currentTurn"
+      [undoDisabled]="!canUndo()"
+      [endTurnDisabled]="!canEndTurn()"
+      (dartThrow)="onDart($event)"
+      (undo)="onUndo()"
+      (endTurn)="onEndTurn()"
+      (leave)="leave()"
+      (rematch)="rematch()"
+    >
+      <ul class="scoreboard">
+        @for (player of session.players(); track player.id) {
+          <li [class.active]="player.id === state.playerIds[state.currentPlayerIndex]">
+            <span class="name">{{ player.name }}</span>
+            <span class="score">{{ state.scores[player.id] }}</span>
+          </li>
+        }
+      </ul>
+    </app-game-shell>
+  } @else {
+    <p class="page-body">No active session.</p>
+  }
+</main>

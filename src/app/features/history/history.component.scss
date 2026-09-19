@@ -1,25 +1,6 @@
-.history {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  max-width: 24rem;
-}
-
-h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.back {
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 44px;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-button);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 1rem;
+:host {
+  display: block;
+  height: 100dvh;
 }
 
 .empty {
@@ -37,9 +18,9 @@ h1 {
 }
 
 .match {
-  padding: 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-button);
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-radius: 1rem;
   background: var(--color-surface);
 
   p {

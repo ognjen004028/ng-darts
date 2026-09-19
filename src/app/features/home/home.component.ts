@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AddPlayersComponent } from '../../shared/add-players/add-players.component';
 import { Player } from '../../domain/models/player';
@@ -9,7 +8,7 @@ import { GameSessionService } from '../../state/game-session.service';
 
 @Component({
   selector: 'app-home',
-  imports: [FormsModule, AddPlayersComponent],
+  imports: [AddPlayersComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +31,15 @@ export class HomeComponent {
 
   onPlayersChange(players: Player[]): void {
     this.players = players;
+  }
+
+  selectGamemode(mode: GameMode): void {
+    this.selectedGamemode = mode;
+  }
+
+  cycleX01Score(): void {
+    const index = this.x01Scores.indexOf(this.selectedX01Score);
+    this.selectedX01Score = this.x01Scores[(index + 1) % this.x01Scores.length];
   }
 
   startGame(): void {
