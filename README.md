@@ -30,6 +30,9 @@ Open `http://localhost:4200/`.
 | Script | Command |
 |--------|---------|
 | Start the dev server | `npm start` |
+
+## Try it out online (work in progress)
+https://darts-helper.netlify.app/
 | Production build | `npm run build` |
 | Unit tests (watch) | `npm test` |
 | Unit tests (one shot) | `npm run test:ci` |
